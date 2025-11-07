@@ -1,0 +1,80 @@
+/* === Layout utama === */
+.login-page {
+  background-color: #ffffff;
+  width: 100vw; 
+}
+
+.login-left {
+  background-color: #C10C99;
+  border-top-right-radius: 100px;
+  border-bottom-right-radius: 100px;
+}
+
+.login-logo {
+  font-size: 52px;
+  font-weight: 800;
+  color: #000000;
+  letter-spacing: 1px;
+}
+
+/* === Area kanan === */
+.login-right {
+  background-color: #ffffff;
+}
+
+.login-box {
+  width: 380px;
+}
+
+/* === Link register === */
+.register-link {
+  color: #C10C99;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* === Input styling === */
+.form-control::placeholder {
+  color: #aaa;
+}
+
+.form-control:focus {
+  box-shadow: none;
+  border-color: #C10C99;
+}
+
+/* === Tombol login === */
+.btn-login {
+  background-color: #C10C99;
+  color: white;
+  border: none;
+  border-radius: 30px;
+  padding: 10px;
+  font-weight: 600;
+  transition: background-color 0.3s;
+}
+
+.btn-login:hover {
+  background-color: #a5097f;
+}
+
+/* === Ikon sosial === */
+.social-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  color: white;
+  background-color: #1e1e1e;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: 0.3s;
+}
+
+.social-icon:hover {
+  background-color: #C10C99;
+}
+
+.facebook { color: #1877f2; }
+.apple { color: #fff; }
+.google { color: #db4437; }

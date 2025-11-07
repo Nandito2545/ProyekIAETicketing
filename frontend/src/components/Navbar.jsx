@@ -1,5 +1,7 @@
 import React from "react";
 import { Navbar, Nav, Container, Button } from "react-bootstrap";
+import { Link } from "react-router-dom";
+
 
 const NavBar = () => {
   return (
@@ -9,14 +11,17 @@ const NavBar = () => {
         <Navbar.Toggle aria-controls="navbar-nav" />
         <Navbar.Collapse id="navbar-nav" className="justify-content-center">
           <Nav className="gap-4">
-            <Nav.Link href="#">Home</Nav.Link>
-            <Nav.Link href="#">Event</Nav.Link>
-            <Nav.Link href="#">My Tickets</Nav.Link>
+            <Nav.Link as={Link} to="/">Home</Nav.Link>
+            <Nav.Link as={Link} to="/Event">Event</Nav.Link>
+            <Nav.Link as={Link} to="/MyTickets">My Tickets</Nav.Link>
+
           </Nav>
         </Navbar.Collapse>
         <div className="d-flex gap-2">
-          <Button variant="outline-dark" size="sm">Login</Button>
-          <Button variant="secondary" size="sm">Sign Up</Button>
+          <Button as={Link} to="/SignIn" variant="outline-dark" size="sm">
+            Sign in
+          </Button>
+          <Button as={Link} to="/SignUp" variant="secondary" size="sm">Sign Up</Button>
         </div>
       </Container>
     </Navbar>

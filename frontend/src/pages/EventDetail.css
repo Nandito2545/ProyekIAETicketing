@@ -1,0 +1,68 @@
+.event-detail-page {
+  background-color: #fff;
+  width: 100vw;
+  height: fit-content ;
+
+}
+
+.ticket-options {
+  flex-wrap: wrap;
+}
+
+.ticket-card {
+  flex: 1;
+  padding: 20px;
+  border-radius: 12px;
+  border: 2px solid #ddd;
+  background: #fff;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  text-align: center;
+  min-width: 180px;
+}
+
+.ticket-card input[type="radio"] {
+  display: none;
+}
+
+.ticket-card:hover {
+  border-color: #C10C99;
+  transform: translateY(-3px);
+}
+
+.ticket-card.selected {
+  border-color: #C10C99;
+  box-shadow: 0 4px 12px rgba(193, 12, 153, 0.25);
+}
+
+.price {
+  color: #C10C99;
+  font-weight: 600;
+  margin-top: 4px;
+}
+
+.ticket-form input {
+  border-radius: 10px;
+  border: 1.5px solid #C10C99;
+  padding: 10px 15px;
+}
+
+.btn-buy {
+  background-color: #C10C99;
+  color: #fff;
+  border: none;
+  padding: 12px 30px;
+  border-radius: 25px;
+  transition: 0.3s;
+  width: 100%;
+  font-weight: 600;
+}
+
+.btn-buy:hover {
+  background-color: #a50981;
+}
+
+.btn-buy:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}

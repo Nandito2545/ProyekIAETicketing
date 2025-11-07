@@ -1,0 +1,62 @@
+/* === Layout utama === */
+.signup-page {
+  background-color: #fff;
+    width: 100vw; 
+
+}
+
+.signup-left {
+  background-color: #C10C99;
+  border-top-right-radius: 100px;
+  border-bottom-right-radius: 100px;
+}
+
+.signup-logo {
+  font-size: 52px;
+  font-weight: 800;
+  color: #000000;
+  letter-spacing: 1px;
+}
+
+/* === Area kanan === */
+.signup-right {
+  background-color: #fff;
+}
+
+.signup-box {
+  width: 380px;
+}
+
+/* === Link login === */
+.login-link {
+  color: #C10C99;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* === Input styling === */
+.form-control::placeholder {
+  color: #888;
+}
+
+.form-control:focus {
+  box-shadow: none;
+  border-color: #C10C99;
+}
+
+/* === Tombol register === */
+.btn-register {
+  background-color: #C10C99;
+  color: white;
+  border: none;
+  border-radius: 30px;
+  padding: 10px;
+  font-weight: 600;
+  transition: background-color 0.3s, box-shadow 0.3s;
+  box-shadow: 0px 5px 10px rgba(193, 12, 153, 0.3);
+}
+
+.btn-register:hover {
+  background-color: #a5097f;
+  box-shadow: 0px 6px 12px rgba(193, 12, 153, 0.5);
+}

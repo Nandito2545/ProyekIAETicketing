@@ -1,14 +1,26 @@
-import { Link } from "react-router-dom";
+import React from "react";
+import { Navbar, Nav, Container, Button } from "react-bootstrap";
 
-export default function Navbar() {
+const NavBar = () => {
   return (
-    <nav className="navbar">
-      <h2 className="logo">EventSync</h2>
-      <div className="menu">
-        <Link to="/">Home</Link>
-        <Link to="/my-tickets">My Tickets</Link>
-        <Link to="/login">Login</Link>
-      </div>
-    </nav>
+    <Navbar expand="lg" className="py-3 bg-white shadow-sm">
+      <Container>
+        <Navbar.Brand href="#" className="fw-bold fs-4">TICKET.ID</Navbar.Brand>
+        <Navbar.Toggle aria-controls="navbar-nav" />
+        <Navbar.Collapse id="navbar-nav" className="justify-content-center">
+          <Nav className="gap-4">
+            <Nav.Link href="#">Home</Nav.Link>
+            <Nav.Link href="#">Event</Nav.Link>
+            <Nav.Link href="#">My Tickets</Nav.Link>
+          </Nav>
+        </Navbar.Collapse>
+        <div className="d-flex gap-2">
+          <Button variant="outline-dark" size="sm">Login</Button>
+          <Button variant="secondary" size="sm">Sign Up</Button>
+        </div>
+      </Container>
+    </Navbar>
   );
-}
+};
+
+export default NavBar;

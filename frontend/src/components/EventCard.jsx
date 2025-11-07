@@ -1,11 +1,12 @@
-import { Link } from "react-router-dom";
+import React from "react";
 
-export default function EventCard({ event }) {
+export default function EventCard({ image, title }) {
   return (
-    <div className="event-card">
-      <h3>{event.name}</h3>
-      <p>Date: {event.date}</p>
-      <Link to={`/event/${event.id}`}>View Details</Link>
+    <div className="w-80 bg-gray-100 rounded-xl shadow-md overflow-hidden flex-shrink-0 hover:scale-105 transition-transform duration-300">
+      <img src={image} alt={title} className="w-full h-48 object-cover" />
+      <div className="p-4 text-center">
+        <p className="font-medium">{title}</p>
+      </div>
     </div>
   );
 }

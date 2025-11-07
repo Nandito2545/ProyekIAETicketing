@@ -1,0 +1,294 @@
+/* Pastikan hero section full width & height */
+.hero-section {
+  width: 100vw;               /* Full lebar viewport */
+  height: 85vh;              /* Full tinggi layar */
+  background: url("../assets/hero.jpg") center center / cover no-repeat;
+  position: relative;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
+/* Hilangkan efek margin kiri-kanan bawaan container */
+.hero-section .container,
+.hero-section .row {
+  margin: 0;
+  padding: 0;
+}
+
+/* Overlay gelap agar teks kontras */
+.hero-overlay {
+  position: absolute;
+  inset: 0; /* shorthand untuk top, right, bottom, left: 0 */
+  background: rgba(0, 0, 0, 0.45);
+  z-index: 1;
+}
+
+.hero-content {
+  position: relative;
+  z-index: 2;
+  max-width: 1100px;
+  text-align: center;
+}
+
+/* Pastikan body tidak overflow ke kanan */
+body {
+  overflow-x: hidden;
+}
+
+.upcoming-card {
+  position: relative;
+  border-radius: 20px;
+  overflow: hidden;
+  transition: transform 0.4s ease, box-shadow 0.4s ease;
+}
+
+.upcoming-img {
+  width: 100%;
+  height: 250px;
+  object-fit: cover;
+  transition: filter 0.4s ease;
+}
+
+/* efek hover: card ikut membesar */
+.upcoming-card:hover {
+  transform: scale(1.05);
+  box-shadow: 0 12px 25px rgba(0, 0, 0, 0.2);
+}
+
+.upcoming-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0);
+  transition: background 0.3s ease;
+}
+
+.upcoming-card:hover .upcoming-overlay {
+  background: rgba(0, 0, 0, 0.15);
+}
+
+.slick-prev:before,
+.slick-next:before {
+  color: #9c27b0;
+  font-size: 28px;
+  opacity: 0.8;
+}
+
+.slick-prev {
+  left: -35px;
+}
+.slick-next {
+  right: -25px;
+}
+
+@media (max-width: 768px) {
+  .upcoming-img {
+    height: 200px;
+  }
+}
+
+
+
+
+/* ===== TOP EVENTS SECTION ===== */
+.top-events {
+  background-color: #C10C99;
+  border-radius: 16px;
+  color: #fff;
+  margin-left: calc(-4 * var(--bs-gutter-x));
+  margin-right: calc(-4 * var(--bs-gutter-x));
+}
+
+/* ===== CARD STYLE ===== */
+.top-card {
+  position: relative;
+  overflow: hidden;
+  border-radius: 20px;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.top-card img {
+  width: 100%;
+  height: 220px;
+  object-fit: cover;
+  filter: brightness(0.6);
+  transition: transform 0.4s ease, filter 0.3s ease;
+}
+
+.top-card:hover img {
+  transform: scale(1.05);
+  filter: brightness(1);
+}
+
+/* ===== ANGKA BESAR DI ATAS GAMBAR ===== */
+.number-overlay {
+  position: absolute;
+  left: 15px;
+  bottom: 5px;
+  z-index: 2;
+}
+
+.number-overlay span {
+  font-size: 6rem;
+  font-weight: 800;
+  color: rgba(255, 255, 255, 0.3);
+  -webkit-text-stroke: 2px #ffffff;
+  text-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+  opacity: 0.95;
+  line-height: 1;
+  user-select: none;
+  transition: all 0.3s ease;
+}
+
+.top-card:hover .number-overlay span {
+  color: rgba(255, 255, 255, 0.6);
+  -webkit-text-stroke: 2.5px #C10C99;
+  text-shadow: 0 0 15px #c10c9a49;
+}
+
+/* ===== BUY OVERLAY ===== */
+.buy-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 100%;
+  background: rgba(0, 0, 0, 0);
+  opacity: 0;
+  transition: background 0.3s ease, opacity 0.3s ease;
+  z-index: 3;
+}
+
+.top-card:hover .buy-overlay {
+  background: rgba(0, 0, 0, 0.4);
+  opacity: 1;
+}
+
+/* ===== BUY BUTTON ===== */
+.buy-btn {
+  border-radius: 30px;
+  background-color: #fff;
+  color: #C10C99;
+  border: none;
+  transition: all 0.3s ease;
+}
+
+.buy-btn:hover {
+  background-color: #C10C99;
+  color: #fff;
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.4);
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 768px) {
+  .number-overlay span {
+    font-size: 4rem;
+  }
+  .top-card img {
+    height: 180px;
+  }
+}
+
+
+.event-card {
+  position: relative;
+  border-radius: 20px;
+  overflow: hidden;
+}
+
+.event-img {
+  width: 100%;
+  height: 250px;
+  object-fit: cover;
+  transition: all 0.4s ease;
+}
+
+.event-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(223, 223, 223, 0.7); /* warna ungu transparan */
+  opacity: 0;
+  transition: all 0.3s ease;
+}
+
+.event-card:hover .event-overlay {
+  opacity: 1;
+}
+
+.btn-ticket {
+  background-color: #C10C99; /* pink vibrant */
+  color: white;
+  border: none;
+  border-radius: 25px;
+  padding: 10px 25px;
+  font-size: 16px;
+  transition: all 0.3s ease;
+}
+
+.btn-ticket:hover {
+  background-color: #670552;
+  color: #ffffff;
+  transform: scale(1.05);
+}
+
+.slick-prev:before,
+.slick-next:before {
+  color: #9c27b0;
+  font-size: 35px;
+  opacity: 0.8;
+}
+
+.slick-prev {
+  left: -35px;
+}
+.slick-next {
+  right: -25px;
+}
+
+@media (max-width: 768px) {
+  .event-img {
+    height: 200px;
+  }
+}
+
+
+.top-card img {
+  transition: transform 0.4s ease;
+  
+}
+.imgUp{
+    height: 250px !important;
+    object-fit: cover;
+    gap: 12px;
+}
+.top-card:hover img {
+  transform: scale(1.05);
+}
+
+.overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Text Outline Effect */
+.text-outline {
+  text-shadow: 2px 2px 6px rgba(0, 0, 0, 0.5);
+}
+
+/* General image styling */
+img {
+  border-radius: 12px;
+}

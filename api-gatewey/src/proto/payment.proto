@@ -1,0 +1,26 @@
+syntax = "proto3";
+
+package payment;
+
+service PaymentService {
+  rpc ProcessPayment (ProcessPaymentRequest) returns (PaymentResponse);
+  rpc GetPaymentStatus (PaymentIdRequest) returns (PaymentResponse);
+}
+
+message ProcessPaymentRequest {
+  string userId = 1;
+  string ticketId = 2;
+  double amount = 3;
+  string method = 4; // e.g., 'credit_card', 'transfer'
+}
+
+message PaymentIdRequest {
+  string paymentId = 1;
+}
+
+message PaymentResponse {
+  bool success = 1;
+  string message = 2;
+  string paymentId = 3;
+  string status = 4; // 'pending', 'success', 'failed'
+}

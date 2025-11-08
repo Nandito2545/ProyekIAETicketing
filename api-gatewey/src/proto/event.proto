@@ -1,0 +1,98 @@
+syntax = "proto3";
+
+package event;
+
+// EVENT SERVICE
+service EventService {
+  rpc GetAllEvents (Empty) returns (EventListResponse);
+  rpc GetEvent (EventIdRequest) returns (EventResponse);
+  rpc CreateEvent (CreateEventRequest) returns (EventResponse);
+  rpc UpdateEvent (UpdateEventRequest) returns (EventResponse);
+  rpc DeleteEvent (EventIdRequest) returns (DeleteResponse);
+}
+
+// TICKET SERVICE
+service TicketService {
+  rpc GetAllTickets (Empty) returns (TicketListResponse);
+  rpc GetTicketsByUser (UserIdRequest) returns (TicketListResponse);
+  rpc CreateTicket (CreateTicketRequest) returns (TicketResponse);
+  rpc DeleteTicket (TicketIdRequest) returns (DeleteResponse);
+}
+
+// MESSAGE DEFINITIONS
+message Empty {}
+
+message EventIdRequest {
+  string id = 1;
+}
+
+message CreateEventRequest {
+  string name = 1;
+  string date = 2;
+  string location = 3;
+  string description = 4;
+}
+
+message UpdateEventRequest {
+  string id = 1;
+  string name = 2;
+  string date = 3;
+  string location = 4;
+  string description = 5;
+}
+
+message EventResponse {
+  bool success = 1;
+  string message = 2;
+  Event event = 3;
+}
+
+message EventListResponse {
+  repeated Event events = 1;
+}
+
+message Event {
+  string id = 1;
+  string name = 2;
+  string date = 3;
+  string location = 4;
+  string description = 5;
+}
+
+// TICKET MESSAGES
+message UserIdRequest {
+  string userId = 1;
+}
+
+message TicketIdRequest {
+  string id = 1;
+}
+
+message CreateTicketRequest {
+  string eventId = 1;
+  string userId = 2;
+  int32 quantity = 3;
+}
+
+message TicketResponse {
+  bool success = 1;
+  string message = 2;
+  Ticket ticket = 3;
+}
+
+message TicketListResponse {
+  repeated Ticket tickets = 1;
+}
+
+message Ticket {
+  string id = 1;
+  string eventId = 2;
+  string userId = 3;
+  int32 quantity = 4;
+  string code = 5;
+}
+
+message DeleteResponse {
+  bool success = 1;
+  string message = 2;
+}

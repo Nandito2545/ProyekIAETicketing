@@ -40,8 +40,8 @@ CREATE TABLE `users` (
 
 -- Insert default users
 INSERT INTO `users` (`username`, `password`, `role`, `email`, `phone`) VALUES
-('admin', '$2a$10$HsKvIrP7z/9jVQh3ZktCBOMbyS1dMf2D0MKKxVwBa.2bEZvjBExn6', 'admin', 'admin@ticket.id', '081234567890'),
-('user', '$2a$10$HsKvIrP7z/9jVQh3ZktCBOMbyS1dMf2D0MKKxVwBa.2bEZvjBExn6', 'user', 'user@ticket.id', '081234567891');
+('admin', '$2b$10$ksITvCl3npRlOxM0uJNsWOc24uPnUQKcFKdKR4LI1wULDHkNPw4wa', 'admin', 'admin@ticket.id', '081234567890'),
+('user', '$2b$10$ksITvCl3npRlOxM0uJNsWOc24uPnUQKcFKdKR4LI1wULDHkNPw4wa', 'user', 'user@ticket.id', '081234567891');
 
 -- ============================================
 -- TABLE: events

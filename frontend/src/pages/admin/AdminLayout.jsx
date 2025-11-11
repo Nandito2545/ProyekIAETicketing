@@ -1,7 +1,8 @@
 import React from "react";
 import { NavLink, Outlet, Link, useNavigate } from "react-router-dom";
-import "./AdminLayout.css"; // Impor CSS yang baru dibuat
-import { LayoutDashboard, Calendar, Users, LogOut } from "lucide-react";
+import "./AdminLayout.css";
+// ✅ Import ikon baru
+import { LayoutDashboard, Calendar, Users, LogOut, CreditCard } from "lucide-react"; 
 
 const AdminLayout = () => {
   const navigate = useNavigate();
@@ -15,7 +16,6 @@ const AdminLayout = () => {
 
   return (
     <div className="admin-layout">
-      {/* Sidebar Ungu */}
       <nav className="admin-sidebar">
         <Link to="/admin/Dashboard" className="admin-sidebar-header">
           TICKET.ID
@@ -29,6 +29,11 @@ const AdminLayout = () => {
             <Calendar size={20} />
             Event Management
           </NavLink>
+          {/* ✅ TAMBAHKAN LINK BARU */}
+          <NavLink to="/admin/payment-management" className="admin-nav-link">
+            <CreditCard size={20} />
+            Payment Management
+          </NavLink>
           <NavLink to="/admin/user-management" className="admin-nav-link">
             <Users size={20} />
             User Management
@@ -41,7 +46,6 @@ const AdminLayout = () => {
         </div>
       </nav>
 
-      {/* Konten Utama */}
       <main className="admin-content">
         <Outlet /> 
       </main>

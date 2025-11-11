@@ -1,29 +1,43 @@
 import React, { useState, useEffect } from "react";
 import { Navbar, Nav, Container, Button, Dropdown, Image } from "react-bootstrap";
 import { Link, useNavigate } from "react-router-dom";
+// ✅ 1. Import ikon User dan Shield
+import { User, Shield } from "lucide-react"; 
 
 const NavBar = () => {
   const navigate = useNavigate();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [userRole, setUserRole] = useState(null); // ✅ 2. State baru untuk role
 
   useEffect(() => {
-  const storedUsername = localStorage.getItem("username");
-  if (storedUsername) setIsLoggedIn(true);
-}, []);
+    const storedUsername = localStorage.getItem("username");
+    const storedRole = localStorage.getItem("role"); // ✅ 3. Ambil role
+    if (storedUsername) {
+      setIsLoggedIn(true);
+      setUserRole(storedRole); // ✅ 4. Simpan role
+    }
+  }, []); // Hanya cek saat komponen dimuat
 
- const handleLogout = () => {
-  // 1️⃣ Hapus data login
-  localStorage.removeItem("username");
-  localStorage.removeItem("role");
-  localStorage.removeItem("token"); // jika ada
+  const handleLogout = () => {
+    localStorage.removeItem("username");
+    localStorage.removeItem("role");
+    localStorage.removeItem("userId"); // ✅ 5. Hapus userId juga
+    localStorage.removeItem("token");
 
-  // 2️⃣ Update state agar Navbar rerender
-  setIsLoggedIn(false);
+    setIsLoggedIn(false);
+    setUserRole(null);
 
-  // 3️⃣ Redirect ke halaman Sign In
-  navigate("/SignIn");
-};
+    navigate("/SignIn");
+  };
 
+  // ✅ 6. Logika untuk menampilkan ikon
+  const ProfileIcon = () => {
+    if (userRole === 'admin') {
+      return <Shield size={20} />; // Ikon untuk Admin
+    }
+    // Default ikon untuk 'user'
+    return <User size={20} />; 
+  };
 
   return (
     <Navbar expand="lg" className="py-3 bg-white shadow-sm">
@@ -55,6 +69,7 @@ const NavBar = () => {
               <Dropdown.Toggle
                 variant="light"
                 id="dropdown-profile"
+                className="d-flex align-items-center justify-content-center" // ✅ 7. Styling
                 style={{
                   width: "40px",
                   height: "40px",
@@ -63,12 +78,8 @@ const NavBar = () => {
                   border: "1px solid #ccc",
                 }}
               >
-                <Image
-                  src="https://via.placeholder.com/40?text=U"
-                  roundedCircle
-                  width="40"
-                  height="40"
-                />
+                {/* ✅ 8. Ganti <img> dengan <ProfileIcon /> */}
+                <ProfileIcon />
               </Dropdown.Toggle>
 
               <Dropdown.Menu>

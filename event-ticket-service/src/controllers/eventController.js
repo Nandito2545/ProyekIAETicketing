@@ -1,11 +1,25 @@
 import pool from '../db.js'; // ✅ Impor pool MySQL
-import { v4 as uuidv4 } from 'uuid'; // Untuk ID (jika perlu)
+import { v4 as uuidv4 } from 'uuid';
 
-// Helper untuk mengubah hasil SQL (Array) menjadi Objek
+// ✅ PERBAIKAN: Buat helper 'formatEvent'
+// Ini akan memetakan snake_case (DB) ke camelCase (gRPC/.proto)
 const formatEvent = (event) => {
   if (!event) return null;
-  // Ubah _id (jika ada) atau id menjadi id string
-  return { ...event, id: event.id.toString() }; 
+  return {
+    id: event.id.toString(),
+    title: event.title,
+    description: event.description,
+    location: event.location,
+    date: event.date,
+    time: event.time,
+    capacity: event.capacity,
+    availableTickets: event.available_tickets, // <- Mapping
+    price: event.price,
+    category: event.category,
+    imageUrl: event.image_url, // <- Mapping
+    createdAt: event.created_at, // <- Mapping
+    updatedAt: event.updated_at  // <- Mapping
+  };
 };
 
 class EventController {
@@ -17,7 +31,6 @@ class EventController {
         capacity, price, category, imageUrl 
       } = call.request;
 
-      // ✅ Logika SQL
       const [result] = await pool.query(
         `INSERT INTO events (title, description, location, date, time, capacity, available_tickets, price, category, image_url, created_at, updated_at) 
          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())`,
@@ -34,7 +47,7 @@ class EventController {
       callback(null, {
         success: true,
         message: 'Event created successfully',
-        event: formatEvent(rows[0])
+        event: formatEvent(rows[0]) // ✅ Gunakan helper format
       });
       
     } catch (error) {
@@ -45,7 +58,6 @@ class EventController {
   async getEvent(call, callback) {
     try {
       const { eventId } = call.request;
-      // ✅ Logika SQL
       const [rows] = await pool.query('SELECT * FROM events WHERE id = ?', [eventId]);
 
       if (rows.length === 0) {
@@ -55,7 +67,7 @@ class EventController {
       callback(null, {
         success: true,
         message: 'Event retrieved successfully',
-        event: formatEvent(rows[0])
+        event: formatEvent(rows[0]) // ✅ Gunakan helper format
       });
       
     } catch (error) {
@@ -71,7 +83,6 @@ class EventController {
       let params = [];
       let whereAdded = false;
 
-      // ✅ Logika Filter SQL
       if (category) {
         query += ' WHERE category = ?';
         params.push(category);
@@ -84,12 +95,10 @@ class EventController {
         params.push(`%${search}%`);
       }
 
-      // ✅ Logika Count Total SQL
       const countQuery = query.replace('SELECT *', 'SELECT COUNT(*) as total');
       const [countRows] = await pool.query(countQuery, params);
       const total = countRows[0].total;
 
-      // ✅ Logika Pagination SQL
       const offset = (page - 1) * limit;
       query += ' ORDER BY created_at DESC LIMIT ? OFFSET ?';
       params.push(limit, offset);
@@ -99,7 +108,7 @@ class EventController {
       callback(null, {
         success: true,
         message: 'Events retrieved successfully',
-        events: events.map(formatEvent),
+        events: events.map(formatEvent), // ✅ Gunakan helper format
         total,
         page,
         limit
@@ -117,7 +126,6 @@ class EventController {
         time, capacity, price, category, imageUrl 
       } = call.request;
 
-      // ✅ Cek event
       const [rows] = await pool.query('SELECT * FROM events WHERE id = ?', [eventId]);
       if (rows.length === 0) {
         return callback(null, { success: false, message: 'Event not found', event: null });
@@ -132,18 +140,22 @@ class EventController {
       const newTime = time || event.time;
       const newPrice = price !== undefined ? price : event.price;
       const newCategory = category || event.category;
-      const newImageUrl = imageUrl || event.imageUrl;
+      const newImageUrl = imageUrl !== undefined ? imageUrl : event.image_url;
       
       let newCapacity = event.capacity;
       let newAvailable = event.available_tickets;
 
-      if (capacity) {
+      // ✅ PERBAIKAN: Cek 'undefined' agar angka 0 bisa diproses
+      if (capacity !== undefined) {
         const difference = capacity - event.capacity;
         newCapacity = capacity;
         newAvailable = event.available_tickets + difference;
+        // Pastikan available tickets tidak negatif
+        if (newAvailable < 0) newAvailable = 0;
+        // Pastikan available tickets tidak melebihi kapasitas baru
+        if (newAvailable > newCapacity) newAvailable = newCapacity;
       }
 
-      // ✅ Logika Update SQL
       await pool.query(
         `UPDATE events SET 
          title = ?, description = ?, location = ?, date = ?, time = ?, 
@@ -162,7 +174,7 @@ class EventController {
       callback(null, {
         success: true,
         message: 'Event updated successfully',
-        event: formatEvent(updatedRows[0])
+        event: formatEvent(updatedRows[0]) // ✅ Gunakan helper format
       });
       
     } catch (error) {
@@ -173,7 +185,6 @@ class EventController {
   async deleteEvent(call, callback) {
     try {
       const { eventId } = call.request;
-      // ✅ Logika Delete SQL
       const [result] = await pool.query('DELETE FROM events WHERE id = ?', [eventId]);
 
       if (result.affectedRows === 0) {
@@ -183,7 +194,6 @@ class EventController {
       callback(null, { success: true, message: 'Event deleted successfully' });
       
     } catch (error) {
-      // Tangani error foreign key (jika tiket masih ada)
       if (error.code === 'ER_ROW_IS_REFERENCED_2') {
          return callback(null, { success: false, message: 'Cannot delete event. Tickets are still associated with it.' });
       }

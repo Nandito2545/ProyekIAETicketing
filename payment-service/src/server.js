@@ -1,11 +1,14 @@
-require('dotenv').config();
-const grpc = require('@grpc/grpc-js');
-const protoLoader = require('@grpc/proto-loader');
-const path = require('path');
-const { v4: uuidv4 } = require('uuid');
-const mysql = require('mysql2/promise');
+import dotenv from 'dotenv';
+dotenv.config();
 
-// Database connection
+import grpc from '@grpc/grpc-js';
+import protoLoader from '@grpc/proto-loader';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import mysql from 'mysql2/promise';
+import { v4 as uuidv4 } from 'uuid';
+import midtransClient from 'midtrans-client';
+
 const pool = mysql.createPool({
   host: process.env.DB_HOST || 'localhost',
   user: process.env.DB_USER || 'root',
@@ -16,7 +19,6 @@ const pool = mysql.createPool({
   queueLimit: 0,
 });
 
-// Test connection
 (async () => {
   try {
     const connection = await pool.getConnection();
@@ -28,7 +30,13 @@ const pool = mysql.createPool({
   }
 })();
 
-// Load Proto
+const snap = new midtransClient.Snap({
+  isProduction: false,
+  serverKey: process.env.MIDTRANS_SERVER_KEY,
+});
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 const PROTO_PATH = path.join(__dirname, 'proto', 'payment.proto');
 const packageDef = protoLoader.loadSync(PROTO_PATH, {
   keepCase: true,
@@ -39,108 +47,151 @@ const packageDef = protoLoader.loadSync(PROTO_PATH, {
 });
 const paymentProto = grpc.loadPackageDefinition(packageDef).payment;
 
-// Payment Controller
+// Helper untuk format data SQL ke gRPC
+const formatPaymentRow = (row) => ({
+  id: row.id.toString(),
+  transaction_id: row.transaction_id,
+  amount: parseFloat(row.amount),
+  payment_method: row.payment_method,
+  status: row.status,
+  event_title: row.event_title || '',
+  payment_date: row.payment_date ? new Date(row.payment_date).toISOString() : '',
+  user_id: row.user_id ? row.user_id.toString() : '' // Kirim user_id
+});
+
 const paymentService = {
+  
+  /**
+   * PROSES PEMBAYARAN (Membuat Token Midtrans)
+   */
   async ProcessPayment(call, callback) {
     const connection = await pool.getConnection();
-    
     try {
+      // ✅ AMBIL: Data customer baru
+      const { 
+        user_id, event_id, amount, method, ticket_id, 
+        full_name, email, phone 
+      } = call.request;
+
+      console.log(`💳 Initiating payment for ticket ${ticket_id}, amount ${amount}`);
+
+      const transaction_id = `TXN-${ticket_id}-${Date.now()}`;
+
       await connection.beginTransaction();
-
-      const { user_id, event_id, amount, method, ticket_id } = call.request;
-
-      console.log(`💳 Processing payment for user ${user_id}, event ${event_id}, amount ${amount}`);
-
-      // Generate transaction ID
-      const transaction_id = `TXN-${Date.now()}-${uuidv4().substr(0, 8).toUpperCase()}`;
-
-      // Simulate payment processing
-      const success = Math.random() > 0.1; // 90% success rate
-
-      if (!success) {
-        await connection.rollback();
-        return callback(null, {
-          success: false,
-          transaction_id: '',
-          message: 'Payment failed. Please try again.'
-        });
-      }
-
-      // Insert payment record
       await connection.query(
         `INSERT INTO payments 
         (transaction_id, ticket_id, user_id, event_id, amount, payment_method, status, payment_date) 
-        VALUES (?, ?, ?, ?, ?, ?, 'success', NOW())`,
-        [transaction_id, ticket_id || 0, user_id, event_id, amount, method]
+        VALUES (?, ?, ?, ?, ?, ?, 'pending', NOW())`,
+        [transaction_id, ticket_id, user_id, event_id, amount, method]
       );
-
-      // Update ticket status to 'paid' if ticket_id provided
-      if (ticket_id) {
-        await connection.query(
-          'UPDATE tickets SET status = ? WHERE id = ?',
-          ['paid', ticket_id]
-        );
-      }
-
       await connection.commit();
 
-      console.log(`✅ Payment successful: ${transaction_id}`);
+      // 3. Siapkan parameter untuk Midtrans
+      const parameter = {
+        transaction_details: {
+          order_id: transaction_id,
+          gross_amount: amount,
+        },
+        // ✅ TAMBAHKAN: Detail customer dari form
+        customer_details: {
+          user_id: user_id,
+          first_name: full_name, // 'full_name' dipetakan ke 'first_name'
+          email: email,
+          phone: phone
+        },
+      };
+
+      const transaction = await snap.createTransaction(parameter);
+      const transactionToken = transaction.token;
+
+      console.log(`✅ Midtrans token created: ${transactionToken}`);
 
       callback(null, {
         success: true,
+        transaction_token: transactionToken,
         transaction_id: transaction_id,
-        message: 'Payment successful!'
+        message: 'Payment token created successfully.'
       });
 
     } catch (error) {
       await connection.rollback();
       console.error('❌ ProcessPayment error:', error);
-      callback(null, {
-        success: false,
-        transaction_id: '',
-        message: error.message
-      });
+      callback(null, { success: false, transaction_token: '', message: error.message });
     } finally {
       connection.release();
+    }
+  },
+
+  async HandlePaymentNotification(call, callback) {
+    const { transaction_id, transaction_status, fraud_status, payment_type } = call.request;
+    console.log(`🔔 Webhook received for ${transaction_id}, status: ${transaction_status}`);
+
+    try {
+      let paymentStatus = 'pending';
+
+      if (transaction_status == 'capture') {
+        if (fraud_status == 'accept') paymentStatus = 'success';
+      } else if (transaction_status == 'settlement') {
+        paymentStatus = 'success';
+      } else if (transaction_status == 'cancel' || transaction_status == 'deny' || transaction_status == 'expire') {
+        paymentStatus = 'failed';
+      }
+
+      const [result] = await pool.query(
+        'UPDATE payments SET status = ?, payment_method = ? WHERE transaction_id = ?',
+        [paymentStatus, payment_type, transaction_id]
+      );
+
+      if (result.affectedRows === 0) throw new Error('Payment record not found.');
+      
+      console.log(`✅ Payment status updated to '${paymentStatus}' for ${transaction_id}`);
+      
+      callback(null, { success: true, message: 'Webhook processed successfully' });
+
+    } catch (error) {
+      console.error('❌ HandlePaymentNotification error:', error);
+      callback(null, { success: false, message: error.message });
     }
   },
 
   async GetPaymentHistory(call, callback) {
     try {
       const { user_id } = call.request;
-
-      const [rows] = await pool.query(
-        `SELECT p.*, e.title as event_title 
-         FROM payments p 
-         LEFT JOIN events e ON p.event_id = e.id 
-         WHERE p.user_id = ? 
-         ORDER BY p.created_at DESC`,
-        [user_id]
-      );
-
-      const payments = rows.map(row => ({
-        id: row.id.toString(),
-        transaction_id: row.transaction_id,
-        amount: parseFloat(row.amount),
-        payment_method: row.payment_method,
-        status: row.status,
-        event_title: row.event_title || '',
-        payment_date: row.payment_date ? row.payment_date.toISOString() : ''
-      }));
-
-      callback(null, { payments });
-
+      const query = `
+        SELECT p.*, e.title as event_title 
+        FROM payments p 
+        LEFT JOIN events e ON p.event_id = e.id 
+        WHERE p.user_id = ? 
+        ORDER BY p.created_at DESC
+      `;
+      const [rows] = await pool.query(query, [user_id]);
+      callback(null, { payments: rows.map(formatPaymentRow) });
     } catch (error) {
       console.error('GetPaymentHistory error:', error);
+      callback(null, { payments: [] });
+    }
+  },
+
+  // ✅ IMPLEMENTASI FUNGSI BARU UNTUK ADMIN
+  async GetAllPayments(call, callback) {
+    try {
+      const query = `
+        SELECT p.*, e.title as event_title 
+        FROM payments p 
+        LEFT JOIN events e ON p.event_id = e.id 
+        ORDER BY p.created_at DESC
+      `;
+      const [rows] = await pool.query(query);
+      callback(null, { payments: rows.map(formatPaymentRow) });
+    } catch (error) {
+      console.error('GetAllPayments error:', error);
       callback(null, { payments: [] });
     }
   }
 };
 
-// Create and start server
 const server = new grpc.Server();
 server.addService(paymentProto.PaymentService.service, paymentService);
-
 const PORT = process.env.PAYMENT_SERVICE_PORT || 50053;
 
 server.bindAsync(
@@ -153,7 +204,7 @@ server.bindAsync(
     }
     console.log('');
     console.log('═══════════════════════════════════════════');
-    console.log('✅ Payment Service is running!');
+    console.log('✅ Payment Service (with Midtrans) is running!');
     console.log('📡 gRPC Server listening on port:', port);
     console.log('⏰ Started at:', new Date().toLocaleString());
     console.log('═══════════════════════════════════════════');

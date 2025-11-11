@@ -1,11 +1,11 @@
-import pool from '../db.js'; // ✅ Impor pool MySQL
+import pool from '../db.js';
 import generateTicketCode from '../utils/generateTicketCode.js';
 
-// Helper untuk format (MySQL tidak butuh populate, kita pakai JOIN)
+// ✅ PERBAIKAN: Helper format untuk memetakan DB ke gRPC
 const formatTicket = (ticket) => {
   if (!ticket) return null;
   
-  // Pisahkan data event dari ticket
+  // 1. Buat objek event (nested)
   const event = {
     id: ticket.event_id.toString(),
     title: ticket.event_title,
@@ -14,24 +14,28 @@ const formatTicket = (ticket) => {
     date: ticket.event_date,
     time: ticket.event_time,
     capacity: ticket.event_capacity,
-    availableTickets: ticket.event_available_tickets,
+    availableTickets: ticket.event_available_tickets, // Mapping
     price: ticket.event_price,
     category: ticket.event_category,
-    imageUrl: ticket.event_image_url,
+    imageUrl: ticket.event_image_url, // Mapping
     createdAt: ticket.event_createdAt,
     updatedAt: ticket.event_updatedAt,
   };
   
-  // Hapus properti event duplikat dari tiket
-  delete ticket.event_title;
-  delete ticket.event_description;
-  // ... (hapus semua field event_* dari objek ticket)
-  // (Ini bisa dilewati jika SELECT * di-manage dengan baik)
-
-  return { ...ticket, id: ticket.id.toString(), event: event };
+  // 2. Buat objek tiket (flat)
+  return {
+    id: ticket.id.toString(),
+    ticketCode: ticket.ticket_code, // Mapping
+    eventId: ticket.event_id.toString(),
+    userId: ticket.user_id.toString(),
+    quantity: ticket.quantity,
+    totalPrice: ticket.total_price, // Mapping
+    status: ticket.status,
+    purchaseDate: ticket.purchase_date, // Mapping
+    event: event // Masukkan objek event yang sudah di-nest
+  };
 };
 
-// Query JOIN yang akan kita gunakan berulang kali
 const TICKET_EVENT_JOIN_QUERY = `
   SELECT 
     t.*, 
@@ -51,17 +55,15 @@ const TICKET_EVENT_JOIN_QUERY = `
   JOIN events e ON t.event_id = e.id
 `;
 
-
 class TicketController {
 
   async createTicket(call, callback) {
-    const connection = await pool.getConnection(); // Butuh transaksi
+    const connection = await pool.getConnection();
     try {
       const { eventId, userId, quantity, totalPrice } = call.request;
 
-      await connection.beginTransaction(); // ✅ Mulai Transaksi
+      await connection.beginTransaction(); 
 
-      // 1. Cek event & Kunci row (FOR UPDATE)
       const [rows] = await connection.query('SELECT * FROM events WHERE id = ? FOR UPDATE', [eventId]);
       if (rows.length === 0) {
         await connection.rollback();
@@ -69,16 +71,13 @@ class TicketController {
       }
       const event = rows[0];
 
-      // 2. Cek ketersediaan
       if (event.available_tickets < quantity) {
         await connection.rollback();
         return callback(null, { success: false, message: `Only ${event.available_tickets} tickets available`, ticket: null });
       }
 
-      // 3. Generate kode
       const ticketCode = generateTicketCode();
 
-      // 4. Buat ticket baru
       const [result] = await connection.query(
         `INSERT INTO tickets (ticket_code, event_id, user_id, quantity, total_price, status, purchase_date, created_at, updated_at) 
          VALUES (?, ?, ?, ?, ?, 'pending', NOW(), NOW(), NOW())`,
@@ -86,21 +85,19 @@ class TicketController {
       );
       const insertId = result.insertId;
 
-      // 5. Update available tickets
       await connection.query(
         'UPDATE events SET available_tickets = available_tickets - ? WHERE id = ?',
         [quantity, eventId]
       );
       
-      await connection.commit(); // ✅ Selesaikan Transaksi
+      await connection.commit();
 
-      // 7. Ambil data lengkap untuk dikirim balik
       const [ticketRows] = await pool.query(`${TICKET_EVENT_JOIN_QUERY} WHERE t.id = ?`, [insertId]);
 
       callback(null, {
         success: true,
         message: 'Ticket created successfully',
-        ticket: formatTicket(ticketRows[0])
+        ticket: formatTicket(ticketRows[0]) // ✅ Gunakan helper format
       });
       
     } catch (error) {
@@ -114,7 +111,6 @@ class TicketController {
   async getTicket(call, callback) {
     try {
       const { ticketId } = call.request;
-      // ✅ Logika SQL
       const [rows] = await pool.query(`${TICKET_EVENT_JOIN_QUERY} WHERE t.id = ?`, [ticketId]);
 
       if (rows.length === 0) {
@@ -124,7 +120,7 @@ class TicketController {
       callback(null, {
         success: true,
         message: 'Ticket retrieved successfully',
-        ticket: formatTicket(rows[0])
+        ticket: formatTicket(rows[0]) // ✅ Gunakan helper format
       });
       
     } catch (error) {
@@ -135,7 +131,6 @@ class TicketController {
   async getTicketsByUser(call, callback) {
     try {
       const { userId } = call.request;
-      // ✅ Logika SQL
       const [tickets] = await pool.query(
         `${TICKET_EVENT_JOIN_QUERY} WHERE t.user_id = ? ORDER BY t.purchase_date DESC`, 
         [userId]
@@ -144,7 +139,7 @@ class TicketController {
       callback(null, {
         success: true,
         message: 'Tickets retrieved successfully',
-        tickets: tickets.map(formatTicket)
+        tickets: tickets.map(formatTicket) // ✅ Gunakan helper format
       });
       
     } catch (error) {
@@ -155,7 +150,6 @@ class TicketController {
   async getTicketsByEvent(call, callback) {
     try {
       const { eventId } = call.request;
-      // ✅ Logika SQL
       const [tickets] = await pool.query(
         `${TICKET_EVENT_JOIN_QUERY} WHERE t.event_id = ? ORDER BY t.purchase_date DESC`, 
         [eventId]
@@ -164,7 +158,7 @@ class TicketController {
       callback(null, {
         success: true,
         message: 'Tickets retrieved successfully',
-        tickets: tickets.map(formatTicket)
+        tickets: tickets.map(formatTicket) // ✅ Gunakan helper format
       });
       
     } catch (error) {
@@ -177,9 +171,8 @@ class TicketController {
     try {
       const { ticketId, status } = call.request;
 
-      await connection.beginTransaction(); // ✅ Mulai Transaksi
+      await connection.beginTransaction(); 
 
-      // ✅ Cek tiket
       const [rows] = await connection.query('SELECT * FROM tickets WHERE id = ? FOR UPDATE', [ticketId]);
       if (rows.length === 0) {
         await connection.rollback();
@@ -187,7 +180,6 @@ class TicketController {
       }
       const ticket = rows[0];
 
-      // Jika cancel, kembalikan stok
       if (status === 'cancelled' && ticket.status !== 'cancelled') {
         await connection.query(
           'UPDATE events SET available_tickets = available_tickets + ? WHERE id = ?',
@@ -195,21 +187,19 @@ class TicketController {
         );
       }
 
-      // Update status
       await connection.query(
         'UPDATE tickets SET status = ?, updated_at = NOW() WHERE id = ?',
         [status, ticketId]
       );
       
-      await connection.commit(); // ✅ Selesaikan Transaksi
+      await connection.commit();
 
-      // Ambil data lengkap
       const [updatedRows] = await pool.query(`${TICKET_EVENT_JOIN_QUERY} WHERE t.id = ?`, [ticketId]);
 
       callback(null, {
         success: true,
         message: 'Ticket status updated successfully',
-        ticket: formatTicket(updatedRows[0])
+        ticket: formatTicket(updatedRows[0]) // ✅ Gunakan helper format
       });
       
     } catch (error) {
@@ -223,7 +213,6 @@ class TicketController {
   async validateTicket(call, callback) {
     try {
       const { ticketCode } = call.request;
-      // ✅ Logika SQL
       const [rows] = await pool.query(`${TICKET_EVENT_JOIN_QUERY} WHERE t.ticket_code = ?`, [ticketCode]);
 
       if (rows.length === 0) {
@@ -235,14 +224,14 @@ class TicketController {
 
       if (isValid && ticket.status === 'paid') {
         await pool.query('UPDATE tickets SET status = \'used\' WHERE id = ?', [ticket.id]);
-        ticket.status = 'used'; // Update objek lokal
+        ticket.status = 'used';
       }
 
       callback(null, {
         success: true,
         message: isValid ? 'Ticket is valid' : 'Ticket is not valid',
         isValid,
-        ticket: formatTicket(ticket)
+        ticket: formatTicket(ticket) // ✅ Gunakan helper format
       });
       
     } catch (error) {

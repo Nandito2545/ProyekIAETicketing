@@ -102,3 +102,17 @@
     grid-template-columns: 1fr;
   }
 }
+
+.event-card {
+  position: relative; /* Diperlukan agar badge bisa di-posisikan */
+}
+
+.event-card-status {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 2;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 6px 10px;
+}

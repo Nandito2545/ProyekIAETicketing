@@ -3,52 +3,166 @@ import { Link } from "react-router-dom";
 import "./Event.css";
 import { FaSearch } from "react-icons/fa";
 import { getAllEvents } from "../../services/eventService";
-// ✅ 1. Import helper
 import { getImageUrl, handleImageError } from "../../utils/imageUtils";
+
+// Fungsi helper untuk status event (Poin 9)
+const getEventStatus = (event) => {
+  // ✅ PERBAIKAN: Gunakan available_tickets (snake_case)
+  if (event.available_tickets === 0) {
+    return { text: "Sold Out", class: "bg-danger" };
+  }
+  
+  try {
+    const eventDateTime = new Date(`${event.date}T${event.time}`);
+    if (eventDateTime < new Date()) {
+      return { text: "Event Ended", class: "bg-secondary" };
+    }
+  } catch (e) {
+    console.error("Invalid date format for event:", event.id, e);
+  }
+
+  return null; // Available
+};
+
 
 const Event = () => {
   const [events, setEvents] = useState([]);
-  // ... (state lainnya) ...
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [search, setSearch] = useState("");
+  const [category, setCategory] = useState("");
 
-  // ... (fungsi fetchEvents, handleSearch, loading, error) ...
-  // (Tidak ada perubahan di logika)
+  useEffect(() => {
+    fetchEvents();
+  }, [category, search]); // ✅ fetch ulang saat search atau category berubah
+
+  const fetchEvents = async () => {
+    try {
+      setLoading(true);
+      const response = await getAllEvents({
+        page: 1,
+        limit: 20, // Tampilkan 20 event
+        category: category,
+        search: search
+      });
+
+      if (response.success) {
+        setEvents(response.events || []);
+      } else {
+        setError(response.message);
+      }
+    } catch (err) {
+      console.error("Error fetching events:", err);
+      setError("Failed to load events. Please try again later.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSearch = (e) => {
+    e.preventDefault();
+    fetchEvents();
+  };
+
+  if (loading) {
+    return (
+      <div className="event-page p-5" style={{ minHeight: '60vh' }}>
+        <div className="text-center">
+          <div className="spinner-border text-primary" role="status">
+            <span className="visually-hidden">Loading...</span>
+          </div>
+          <p className="mt-2">Loading events...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="event-page p-5" style={{ minHeight: '60vh' }}>
+        <div className="alert alert-danger" role="alert">
+          {error}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="event-page p-5">
       <div className="event-content container">
-        {/* ... (Header dan filter) ... */}
+        <div className="event-header">
+          <h2>Events</h2>
+          <form onSubmit={handleSearch} className="search-box">
+            <FaSearch />
+            <input 
+              type="text" 
+              placeholder="Search events..." 
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+          </form>
+        </div>
+
+        {/* Category Filter */}
+        <div className="mb-4">
+          <select 
+            className="form-select w-auto"
+            value={category}
+            onChange={(e) => setCategory(e.target.value)}
+          >
+            <option value="">All Categories</option>
+            <option value="music">Music</option>
+            <option value="sports">Sports</option>
+            <option value="conference">Conference</option>
+            <option value="workshop">Workshop</option>
+            <option value="entertainment">Entertainment</option>
+            <option value="other">Other</option>
+          </select>
+        </div>
 
         {events.length === 0 ? (
           <div className="text-center py-5">
-            <p className="text-muted">No events found.</p>
+            <p className="text-muted">No events found matching your criteria.</p>
           </div>
         ) : (
           <div className="event-grid">
-            {events.map((event) => (
-              <Link 
-                to={`/event/${event.id}`} 
-                key={event.id}
-                className="text-decoration-none"
-              >
-                <div className="event-card">
-                  {/* ✅ 2. Gunakan helper di sini */}
-                  <img 
-                    src={getImageUrl(event.imageUrl)} 
-                    alt={event.title}
-                    onError={handleImageError}
-                  />
-                  <div className="event-info">
-                    <h5>{event.title}</h5>
-                    <p className="text-muted small">{event.date} • {event.time}</p>
-                    <p className="text-muted small">{event.location}</p>
-                    <p className="fw-bold text-primary">
-                      Rp {event.price.toLocaleString('id-ID')}
-                    </p>
-                    <span className="badge bg-secondary">{event.category}</span>
+            {events.map((event) => {
+              const status = getEventStatus(event);
+              
+              return (
+                <Link 
+                  to={`/event/${event.id}`} 
+                  key={event.id}
+                  className={`text-decoration-none ${status ? 'pe-none' : ''}`}
+                  style={status ? { opacity: 0.7, cursor: 'not-allowed' } : {}}
+                  // Mencegah klik jika event tidak available
+                  onClick={(e) => { if (status) e.preventDefault(); }} 
+                >
+                  <div className="event-card">
+                    {status && (
+                      <span className={`badge ${status.class} event-card-status`}>
+                        {status.text}
+                      </span>
+                    )}
+                    {/* ✅ PERBAIKAN: Gunakan image_url (snake_case) */}
+                    <img 
+                      src={getImageUrl(event.image_url)} 
+                      alt={event.title}
+                      onError={handleImageError}
+                    />
+                    <div className="event-info">
+                      <h5>{event.title}</h5>
+                      <p className="text-muted small">{event.date} • {event.time}</p>
+                      <p className="text-muted small">{event.location}</p>
+                      <p className="fw-bold text-primary">
+                        Rp {event.price.toLocaleString('id-ID')}
+                      </p>
+                      <span className="badge bg-secondary">{event.category}</span>
+                    </div>
                   </div>
-                </div>
-              </Link>
-            ))}
+                </Link>
+              );
+            })}
           </div>
         )}
       </div>

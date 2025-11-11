@@ -8,21 +8,19 @@ import Home from "./pages/user/Home";
 import Event from "./pages/user/Event";
 import EventDetail from "./pages/user/EventDetail";
 import MyTickets from "./pages/user/MyTickets";
+import ViewTicket from "./pages/user/ViewTicket"; // ✅ 1. Import halaman baru
 
-// ✅ 1. Import Admin Layout dan halaman-halaman baru
 import AdminLayout from "./pages/admin/AdminLayout";
 import Dashboard from "./pages/admin/Dashboard";
 import EventManagement from "./pages/admin/EventManagement";
 import AddEvent from "./pages/admin/AddEvent";
+import EditEvent from "./pages/admin/EditEvent";
 import UserManagement from "./pages/admin/UserManagement";
-import EditEvent from "./pages/admin/EditEvent"; // ✅ 1. Import file baru
-
+import PaymentManagement from "./pages/admin/PaymentManagement";
 
 function AppContent() {
   const location = useLocation();
 
-  // ✅ 2. Perbarui logic untuk menyembunyikan layout
-  // Sembunyikan NavBar/Footer di halaman auth DAN semua halaman admin
   const hideLayout = ["/SignIn", "/SignUp"].includes(location.pathname) || 
                      location.pathname.startsWith("/admin");
 
@@ -39,17 +37,19 @@ function AppContent() {
         <Route path="/event/:id" element={<EventDetail />} />
         <Route path="/EventDetail" element={<EventDetail />} />
         <Route path="/MyTickets" element={<MyTickets />} />
+        
+        {/* ✅ 2. Tambahkan Rute Baru untuk View Ticket */}
+        <Route path="/ticket/:id" element={<ViewTicket />} />
 
-        {/* === Rute Admin (Menggunakan Layout Khusus) === */}
-        {/* ✅ 3. Definisikan Rute Admin yang baru */}
+        {/* === Rute Admin === */}
         <Route path="/admin" element={<AdminLayout />}>
-          {/* Index route (default untuk /admin) */}
           <Route index element={<Dashboard />} /> 
           <Route path="Dashboard" element={<Dashboard />} />
           <Route path="event-management" element={<EventManagement />} />
           <Route path="add-event" element={<AddEvent />} />
-          <Route path="user-management" element={<UserManagement />} />
           <Route path="edit-event/:id" element={<EditEvent />} />
+          <Route path="user-management" element={<UserManagement />} />
+          <Route path="payment-management" element={<PaymentManagement />} /> 
         </Route>
         
       </Routes>

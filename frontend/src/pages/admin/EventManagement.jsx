@@ -2,7 +2,8 @@ import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { getAllEvents, deleteEvent } from "../../services/eventService";
 import { Edit, Trash2, Plus } from "lucide-react";
-import "./EventManagement.css"; // Impor CSS yang baru dibuat
+import { Spinner, Alert } from "react-bootstrap"; // Import
+import "./EventManagement.css";
 
 const EventManagement = () => {
   const [events, setEvents] = useState([]);
@@ -17,8 +18,8 @@ const EventManagement = () => {
     try {
       setLoading(true);
       setError(null);
-      const res = await getAllEvents({ page: 1, limit: 50 }); // Ambil 50 event
-      if (res.success) {
+      const res = await getAllEvents({ page: 1, limit: 50 });
+      if (res.success && res.events) {
         setEvents(res.events);
       } else {
         setError(res.message || "Failed to fetch events");
@@ -32,14 +33,12 @@ const EventManagement = () => {
   };
 
   const handleDelete = async (eventId, eventTitle) => {
-    // Tampilkan konfirmasi
     if (window.confirm(`Are you sure you want to delete "${eventTitle}"?`)) {
       try {
         const res = await deleteEvent(eventId);
         if (res.success) {
           alert("Event deleted successfully");
-          // Refresh list event
-          fetchEvents(); 
+          fetchEvents(); // Refresh list event
         } else {
           alert(res.message || "Failed to delete event");
         }
@@ -61,8 +60,9 @@ const EventManagement = () => {
       </div>
 
       <div className="admin-table-wrapper">
-        {loading && <p>Loading events...</p>}
-        {error && <p style={{ color: 'red' }}>{error}</p>}
+        {loading && <div className="text-center p-5"><Spinner animation="border" /></div>}
+        
+        {error && <Alert variant="danger">{error}</Alert>}
         
         {!loading && !error && (
           <table className="admin-table">
@@ -77,31 +77,41 @@ const EventManagement = () => {
               </tr>
             </thead>
             <tbody>
-              {events.map((event) => (
-                <tr key={event.id}>
-                  <td>{event.title}</td>
-                  <td>{event.date} {event.time}</td>
-                  <td>{event.location}</td>
-                  <td>{event.price.toLocaleString('id-ID')}</td>
-                  <td>{event.capacity - event.availableTickets} / {event.capacity}</td>
-                  <td className="action-buttons">
-                    <Link 
-                      to={`/admin/edit-event/${event.id}`} 
-                      className="btn-action edit" 
-                      title="Edit"
-                    >
-                      <Edit size={18} />
-                    </Link>
-                    <button 
-                      className="btn-action delete" 
-                      title="Delete"
-                      onClick={() => handleDelete(event.id, event.title)}
-                    >
-                      <Trash2 size={18} />
-                    </button>
-                  </td>
-                </tr>
-              ))}
+              {events.map((event) => {
+                
+                // ✅ PERBAIKAN: Tambahkan kalkulasi aman anti-NaN
+                const capacity = Number(event.capacity) || 0;
+                const available = Number(event.available_tickets) || 0;
+                const price = Number(event.price) || 0;
+                const sold = capacity - available;
+
+                return (
+                  <tr key={event.id}>
+                    <td>{event.title}</td>
+                    <td>{event.date} {event.time}</td>
+                    <td>{event.location}</td>
+                    <td>{price.toLocaleString('id-ID')}</td>
+                    {/* ✅ PERBAIKAN: Gunakan variabel yang aman */}
+                    <td>{sold} / {capacity}</td>
+                    <td className="action-buttons">
+                      <Link 
+                        to={`/admin/edit-event/${event.id}`} 
+                        className="btn-action edit" 
+                        title="Edit"
+                      >
+                        <Edit size={18} />
+                      </Link>
+                      <button 
+                        className="btn-action delete" 
+                        title="Delete"
+                        onClick={() => handleDelete(event.id, event.title)}
+                      >
+                        <Trash2 size={18} />
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         )}

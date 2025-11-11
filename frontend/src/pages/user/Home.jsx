@@ -6,7 +6,7 @@ import { Container, Row, Col, Button, Form } from "react-bootstrap";
 import { Link } from "react-router-dom";
 import "./Home.css";
 import { getAllEvents } from "../../services/eventService";
-// ✅ 1. Import helper
+// ✅ Import helper gambar
 import { getImageUrl, handleImageError } from "../../utils/imageUtils"; 
 
 const Home = () => {
@@ -17,6 +17,7 @@ const Home = () => {
     const fetchEvents = async () => {
       try {
         setLoading(true);
+        // Ambil 10 event terbaru
         const res = await getAllEvents({ page: 1, limit: 10 }); 
         if (res.success) {
           setEvents(res.events);
@@ -47,14 +48,32 @@ const Home = () => {
 
   return (
     <>
+      {/* HERO SECTION (Banner Tetap) */}
       <section className="hero-section d-flex align-items-center justify-content-center text-center text-white">
-        {/* ... (Hero content) ... */}
+        <div className="hero-overlay"></div>
+        <div className="hero-content position-relative">
+          <h1 className="fw-bold display-4 mb-3">
+            Temukan lagumu, rasakan energinya. <br /> Tiketnya, kami yang urus.
+          </h1>
+          <Link to="/Event">
+            <Button variant="light" className="px-4 py-2 fw-semibold">
+              GET TICKET
+            </Button>
+          </Link>
+        </div>
       </section>
 
       <Container className="my-5">
         {/* UPCOMING EVENTS */}
         <div className="mt-5">
-          {/* ... (Header) ... */}
+          <div className="d-flex justify-content-between align-items-center mb-3">
+            <h4 className="fw-bold">Upcoming Events</h4>
+            {/* Form search ini belum fungsional, tapi kita biarkan UI-nya */}
+            <Form className="d-flex" style={{ maxWidth: "250px" }}>
+              <Form.Control type="search" placeholder="Search events..." />
+            </Form>
+          </div>
+
           {loading ? (
             <p>Loading events...</p>
           ) : (
@@ -62,9 +81,9 @@ const Home = () => {
               {events.map((event) => (
                 <div key={event.id} className="px-3">
                   <div className="upcoming-card position-relative overflow-hidden rounded-4 shadow-sm">
-                    {/* ✅ 2. Gunakan helper di sini */}
+                    {/* ✅ PERBAIKAN: Gunakan image_url (snake_case) */}
                     <img
-                      src={getImageUrl(event.imageUrl)}
+                      src={getImageUrl(event.image_url)}
                       alt={event.title}
                       className="upcoming-img img-fluid"
                       onError={handleImageError} 
@@ -84,9 +103,9 @@ const Home = () => {
             {topEvents.map((event, index) => (
               <Col md={4} sm={6} xs={12} key={event.id}>
                 <div className="top-card position-relative overflow-hidden rounded-4 shadow-sm">
-                  {/* ✅ 3. Gunakan helper di sini */}
+                  {/* ✅ PERBAIKAN: Gunakan image_url (snake_case) */}
                   <img
-                    src={getImageUrl(event.imageUrl)}
+                    src={getImageUrl(event.image_url)}
                     className="img-fluid w-100"
                     alt={event.title}
                     onError={handleImageError}
@@ -117,9 +136,9 @@ const Home = () => {
               {events.map((event) => (
                 <div key={event.id} className="px-2">
                   <div className="event-card position-relative overflow-hidden rounded-4 shadow-sm">
-                    {/* ✅ 4. Gunakan helper di sini */}
+                    {/* ✅ PERBAIKAN: Gunakan image_url (snake_case) */}
                     <img
-                      src={getImageUrl(event.imageUrl)}
+                      src={getImageUrl(event.image_url)}
                       alt={event.title}
                       className="img-fluid event-img"
                       onError={handleImageError}

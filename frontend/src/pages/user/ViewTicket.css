@@ -1,0 +1,103 @@
+.view-ticket-page {
+  padding: 40px;
+  background-color: #f4f7fa;
+  min-height: 80vh;
+}
+
+.ticket-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+  gap: 25px;
+  justify-items: center;
+}
+
+.ticket-visual {
+  width: 100%;
+  max-width: 450px;
+  background-color: #C10C99; /* Warna ungu dari desain */
+  color: white;
+  border-radius: 20px;
+  padding: 25px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  box-shadow: 0 10px 20px rgba(193, 12, 153, 0.3);
+  position: relative;
+}
+
+/* Lingkaran pemotong di sisi */
+.ticket-visual::before,
+.ticket-visual::after {
+  content: '';
+  position: absolute;
+  width: 40px;
+  height: 40px;
+  background-color: #f4f7fa; /* Warna background halaman */
+  border-radius: 50%;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.ticket-visual::before {
+  left: -20px;
+}
+
+.ticket-visual::after {
+  right: -20px;
+}
+
+.ticket-info {
+  flex-grow: 1;
+}
+
+.ticket-info h3 {
+  font-weight: 700;
+  font-size: 22px;
+  margin-bottom: 15px;
+}
+
+.ticket-info p {
+  margin-bottom: 5px;
+  font-size: 15px;
+  opacity: 0.9;
+}
+
+.ticket-qr {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  background-color: white;
+  padding: 10px;
+  border-radius: 8px;
+}
+
+.btn-download-ticket {
+  width: 100%;
+  padding: 8px;
+  border: none;
+  border-radius: 6px;
+  background-color: #f0f0f0;
+  color: #333;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.btn-download-ticket:hover {
+  background-color: #ddd;
+}
+
+.view-ticket-header {
+  margin-bottom: 30px;
+}
+
+.view-ticket-header .back-link {
+  color: #555;
+  text-decoration: none;
+  font-weight: 500;
+}
+.view-ticket-header .back-link:hover {
+  color: #C10C99;
+}

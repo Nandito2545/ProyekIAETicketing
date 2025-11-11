@@ -83,10 +83,10 @@ message Event {
   string date = 5;
   string time = 6;
   int32 capacity = 7;
-  int32 availableTickets = 8;
+  int32 available_tickets = 8; // ✅ Pastikan ini snake_case
   double price = 9;
   string category = 10;
-  string imageUrl = 11;
+  string image_url = 11; // ✅ Pastikan ini snake_case
   string createdAt = 12;
   string updatedAt = 13;
 }
@@ -141,13 +141,13 @@ message ValidateTicketResponse {
 
 message Ticket {
   string id = 1;
-  string ticketCode = 2;
+  string ticket_code = 2; // ✅ snake_case
   string eventId = 3;
   string userId = 4;
   int32 quantity = 5;
-  double totalPrice = 6;
+  double total_price = 6; // ✅ snake_case
   string status = 7;
-  string purchaseDate = 8;
+  string purchase_date = 8; // ✅ snake_case
   Event event = 9;
 }
 

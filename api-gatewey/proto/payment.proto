@@ -4,17 +4,59 @@ package payment;
 
 service PaymentService {
   rpc ProcessPayment (PaymentRequest) returns (PaymentResponse);
+  rpc GetPaymentHistory (UserIdRequest) returns (PaymentHistoryResponse);
+  rpc HandlePaymentNotification (NotificationRequest) returns (NotificationResponse);
+  rpc GetAllPayments (Empty) returns (PaymentHistoryResponse);
 }
+
+message Empty {}
 
 message PaymentRequest {
   string user_id = 1;
   string event_id = 2;
   double amount = 3;
   string method = 4;
+  string ticket_id = 5;
+  // ✅ TAMBAHKAN: Detail customer
+  string full_name = 6;
+  string email = 7;
+  string phone = 8;
 }
 
 message PaymentResponse {
   bool success = 1;
-  string transaction_id = 2;
   string message = 3;
+  string transaction_token = 2; 
+  string transaction_id = 4; 
+}
+
+message NotificationRequest {
+  string transaction_status = 1;
+  string transaction_id = 2;
+  string fraud_status = 3;
+  string payment_type = 4;
+}
+
+message NotificationResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+message UserIdRequest {
+  string user_id = 1;
+}
+
+message PaymentHistoryResponse {
+  repeated Payment payments = 1;
+}
+
+message Payment {
+  string id = 1;
+  string transaction_id = 2;
+  double amount = 3;
+  string payment_method = 4;
+  string status = 5;
+  string event_title = 6;
+  string payment_date = 7;
+  string user_id = 8;
 }

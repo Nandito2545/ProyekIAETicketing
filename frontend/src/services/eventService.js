@@ -2,6 +2,23 @@ import axios from "axios";
 
 const API_URL = import.meta.env.VITE_EVENT_API || "http://localhost:5000/api/events";
 
+// ✅ 1. FUNGSI BARU UNTUK UPLOAD GAMBAR
+// Ini akan mengirim file ke route /upload yang baru kita buat
+export const uploadImage = async (imageFile) => {
+  const formData = new FormData();
+  formData.append('image', imageFile);
+
+  const token = localStorage.getItem('token');
+  const response = await axios.post(`${API_URL}/upload`, formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data',
+      'Authorization': `Bearer ${token}`
+    }
+  });
+  return response.data; // Obyek baliknya: { success: true, filePath: 'uploads/...' }
+};
+
+
 // Get all events with optional filters
 export const getAllEvents = async (filters = {}) => {
   const { page = 1, limit = 10, category, search } = filters;
@@ -23,6 +40,7 @@ export const getEventById = async (eventId) => {
 };
 
 // Create new event (admin only)
+// ✅ 2. createEvent SEKARANG HANYA MENGIRIM JSON (datanya, bukan file)
 export const createEvent = async (eventData) => {
   const token = localStorage.getItem('token');
   const response = await axios.post(API_URL, eventData, {
@@ -34,6 +52,7 @@ export const createEvent = async (eventData) => {
 };
 
 // Update event (admin only)
+// ✅ 3. updateEvent SEKARANG HANYA MENGIRIM JSON
 export const updateEvent = async (eventId, eventData) => {
   const token = localStorage.getItem('token');
   const response = await axios.put(`${API_URL}/${eventId}`, eventData, {

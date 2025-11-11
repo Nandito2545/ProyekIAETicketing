@@ -1,0 +1,65 @@
+.event-management-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30px;
+}
+
+.btn-add-event {
+  background-color: #C10C99;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: background-color 0.2s;
+}
+
+.btn-add-event:hover {
+  background-color: #a5097f;
+}
+
+.admin-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.admin-table th,
+.admin-table td {
+  padding: 15px;
+  text-align: left;
+  border-bottom: 1px solid #eee;
+  color: #333;
+}
+
+.admin-table th {
+  font-weight: 600;
+  color: #555;
+  font-size: 14px;
+  background-color: #f9f9f9;
+}
+
+.admin-table tr:last-child td {
+  border-bottom: none;
+}
+
+.admin-table .action-buttons {
+  display: flex;
+  gap: 10px;
+}
+
+.btn-action {
+  background: none;
+  border: none;
+  padding: 5px;
+  cursor: pointer;
+  color: #555;
+}
+
+.btn-action.edit {
+  color: #0d6efd;
+}
+.btn-action.delete {
+  color: #dc3545;
+}

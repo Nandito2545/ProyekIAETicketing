@@ -1,7 +1,7 @@
-const express = require('express');
+import express from 'express';
 const router = express.Router();
-const notificationController = require('../controllers/notificationController');
-const authMiddleware = require('../middlewares/authMiddleware');
+import notificationController from '../controllers/notificationController.js';
+import authMiddleware from '../middlewares/authMiddleware.js';
 
 // Kirim notifikasi (admin)
 router.post('/', authMiddleware, notificationController.sendNotification);
@@ -9,4 +9,4 @@ router.post('/', authMiddleware, notificationController.sendNotification);
 // Ambil notifikasi user
 router.get('/user/:userId', authMiddleware, notificationController.getNotificationsByUser);
 
-module.exports = router;
+export default router;

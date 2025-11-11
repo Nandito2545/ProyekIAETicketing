@@ -1,3 +1,4 @@
+// frontend/src/pages/auth/SignIn.jsx
 import React, { useState } from "react";
 import "./SignIn.css";
 import { FaFacebookF, FaApple, FaGoogle, FaEnvelope, FaLock } from "react-icons/fa";
@@ -24,6 +25,9 @@ const SignIn = () => {
         // Simpan data login di localStorage
         localStorage.setItem("username", res.user.username);
         localStorage.setItem("role", res.user.role);
+        
+        // ✅ PERBAIKAN: Simpan juga 'userId' (ID numerik)
+        localStorage.setItem("userId", res.user.id); 
 
         alert(res.message || "Login berhasil!");
 

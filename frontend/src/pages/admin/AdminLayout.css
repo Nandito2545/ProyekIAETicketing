@@ -1,0 +1,63 @@
+.admin-layout {
+  display: flex;
+  min-height: 100vh;
+  background-color: #f4f7fa; /* Latar belakang area konten */
+}
+
+.admin-sidebar {
+  width: 260px;
+  background-color: #C10C99; /* Warna ungu dari gambar */
+  color: white;
+  padding: 20px;
+  flex-shrink: 0;
+}
+
+.admin-sidebar-header {
+  font-size: 24px;
+  font-weight: 700;
+  text-align: center;
+  padding: 10px 0 30px 0;
+  color: white;
+  text-decoration: none;
+}
+
+.admin-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.admin-nav-link {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 15px;
+  border-radius: 8px;
+  color: #f0d9eb; /* Warna teks non-aktif */
+  text-decoration: none;
+  font-weight: 500;
+  transition: background-color 0.2s, color 0.2s;
+}
+
+.admin-nav-link:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  color: white;
+}
+
+.admin-nav-link.active {
+  background-color: white;
+  color: #C10C99; /* Warna ungu saat aktif */
+  font-weight: 600;
+}
+
+.admin-content {
+  flex-grow: 1;
+  padding: 40px;
+  overflow-y: auto;
+}
+
+.admin-content h1 {
+  color: #333;
+  font-weight: 700;
+  margin-bottom: 30px;
+}

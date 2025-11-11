@@ -1,316 +1,195 @@
-// FILE: src/controllers/eventController.js
-// Business Logic untuk Event Management
+import pool from '../db.js'; // ✅ Impor pool MySQL
+import { v4 as uuidv4 } from 'uuid'; // Untuk ID (jika perlu)
 
-const Event = require('../models/eventModel');
+// Helper untuk mengubah hasil SQL (Array) menjadi Objek
+const formatEvent = (event) => {
+  if (!event) return null;
+  // Ubah _id (jika ada) atau id menjadi id string
+  return { ...event, id: event.id.toString() }; 
+};
 
 class EventController {
   
-  /**
-   * CREATE EVENT
-   * Membuat event baru
-   */
   async createEvent(call, callback) {
     try {
-      // 1. Ambil data dari request
       const { 
-        title, 
-        description, 
-        location, 
-        date, 
-        time, 
-        capacity, 
-        price, 
-        category, 
-        imageUrl 
+        title, description, location, date, time, 
+        capacity, price, category, imageUrl 
       } = call.request;
 
-      // 2. Buat instance Event baru
-      const event = new Event({
-        title,
-        description,
-        location,
-        date,
-        time,
-        capacity,
-        availableTickets: capacity, // Default = capacity
-        price,
-        category,
-        imageUrl: imageUrl || ''
-      });
-
-      // 3. Simpan ke database
-      await event.save();
-
-      // 4. Return success response
+      // ✅ Logika SQL
+      const [result] = await pool.query(
+        `INSERT INTO events (title, description, location, date, time, capacity, available_tickets, price, category, image_url, created_at, updated_at) 
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())`,
+        [
+          title, description, location, date, time, 
+          capacity, capacity, // available_tickets = capacity
+          price, category, imageUrl || ''
+        ]
+      );
+      
+      const insertId = result.insertId;
+      const [rows] = await pool.query('SELECT * FROM events WHERE id = ?', [insertId]);
+      
       callback(null, {
         success: true,
         message: 'Event created successfully',
-        event: {
-          id: event._id.toString(),
-          title: event.title,
-          description: event.description,
-          location: event.location,
-          date: event.date,
-          time: event.time,
-          capacity: event.capacity,
-          availableTickets: event.availableTickets,
-          price: event.price,
-          category: event.category,
-          imageUrl: event.imageUrl,
-          createdAt: event.createdAt.toISOString(),
-          updatedAt: event.updatedAt.toISOString()
-        }
+        event: formatEvent(rows[0])
       });
       
     } catch (error) {
-      // Handle error
-      callback(null, {
-        success: false,
-        message: error.message,
-        event: null
-      });
+      callback(null, { success: false, message: error.message, event: null });
     }
   }
 
-  /**
-   * GET EVENT BY ID
-   * Mengambil detail event berdasarkan ID
-   */
   async getEvent(call, callback) {
     try {
       const { eventId } = call.request;
+      // ✅ Logika SQL
+      const [rows] = await pool.query('SELECT * FROM events WHERE id = ?', [eventId]);
 
-      // Cari event by ID
-      const event = await Event.findById(eventId);
-
-      // Jika tidak ditemukan
-      if (!event) {
-        return callback(null, {
-          success: false,
-          message: 'Event not found',
-          event: null
-        });
+      if (rows.length === 0) {
+        return callback(null, { success: false, message: 'Event not found', event: null });
       }
 
-      // Return event data
       callback(null, {
         success: true,
         message: 'Event retrieved successfully',
-        event: {
-          id: event._id.toString(),
-          title: event.title,
-          description: event.description,
-          location: event.location,
-          date: event.date,
-          time: event.time,
-          capacity: event.capacity,
-          availableTickets: event.availableTickets,
-          price: event.price,
-          category: event.category,
-          imageUrl: event.imageUrl,
-          createdAt: event.createdAt.toISOString(),
-          updatedAt: event.updatedAt.toISOString()
-        }
+        event: formatEvent(rows[0])
       });
       
     } catch (error) {
-      callback(null, {
-        success: false,
-        message: error.message,
-        event: null
-      });
+      callback(null, { success: false, message: error.message, event: null });
     }
   }
 
-  /**
-   * GET ALL EVENTS
-   * List semua events dengan pagination dan filter
-   */
   async getAllEvents(call, callback) {
     try {
-      const { 
-        page = 1, 
-        limit = 10, 
-        category, 
-        search 
-      } = call.request;
+      const { page = 1, limit = 10, category, search } = call.request;
+      
+      let query = 'SELECT * FROM events';
+      let params = [];
+      let whereAdded = false;
 
-      // Build query
-      let query = {};
-
-      // Filter by category
+      // ✅ Logika Filter SQL
       if (category) {
-        query.category = category;
+        query += ' WHERE category = ?';
+        params.push(category);
+        whereAdded = true;
       }
-
-      // Search by text
       if (search) {
-        query.$text = { $search: search };
+        query += whereAdded ? ' AND' : ' WHERE';
+        query += ' (title LIKE ? OR description LIKE ?)';
+        params.push(`%${search}%`);
+        params.push(`%${search}%`);
       }
 
-      // Pagination
-      const skip = (page - 1) * limit;
+      // ✅ Logika Count Total SQL
+      const countQuery = query.replace('SELECT *', 'SELECT COUNT(*) as total');
+      const [countRows] = await pool.query(countQuery, params);
+      const total = countRows[0].total;
 
-      // Execute query
-      const events = await Event.find(query)
-        .sort({ createdAt: -1 }) // Sort terbaru dulu
-        .skip(skip)
-        .limit(limit);
+      // ✅ Logika Pagination SQL
+      const offset = (page - 1) * limit;
+      query += ' ORDER BY created_at DESC LIMIT ? OFFSET ?';
+      params.push(limit, offset);
 
-      // Count total
-      const total = await Event.countDocuments(query);
+      const [events] = await pool.query(query, params);
 
-      // Transform data
-      const eventsList = events.map(event => ({
-        id: event._id.toString(),
-        title: event.title,
-        description: event.description,
-        location: event.location,
-        date: event.date,
-        time: event.time,
-        capacity: event.capacity,
-        availableTickets: event.availableTickets,
-        price: event.price,
-        category: event.category,
-        imageUrl: event.imageUrl,
-        createdAt: event.createdAt.toISOString(),
-        updatedAt: event.updatedAt.toISOString()
-      }));
-
-      // Return response
       callback(null, {
         success: true,
         message: 'Events retrieved successfully',
-        events: eventsList,
+        events: events.map(formatEvent),
         total,
         page,
         limit
       });
       
     } catch (error) {
-      callback(null, {
-        success: false,
-        message: error.message,
-        events: [],
-        total: 0,
-        page: 1,
-        limit: 10
-      });
+      callback(null, { success: false, message: error.message, events: [], total: 0, page: 1, limit: 10 });
     }
   }
 
-  /**
-   * UPDATE EVENT
-   * Update data event
-   */
   async updateEvent(call, callback) {
     try {
       const { 
-        eventId, 
-        title, 
-        description, 
-        location, 
-        date, 
-        time, 
-        capacity, 
-        price, 
-        category, 
-        imageUrl 
+        eventId, title, description, location, date, 
+        time, capacity, price, category, imageUrl 
       } = call.request;
 
-      // Cari event
-      const event = await Event.findById(eventId);
-
-      if (!event) {
-        return callback(null, {
-          success: false,
-          message: 'Event not found',
-          event: null
-        });
+      // ✅ Cek event
+      const [rows] = await pool.query('SELECT * FROM events WHERE id = ?', [eventId]);
+      if (rows.length === 0) {
+        return callback(null, { success: false, message: 'Event not found', event: null });
       }
+      const event = rows[0];
 
-      // Update fields (hanya yang dikirim)
-      if (title) event.title = title;
-      if (description) event.description = description;
-      if (location) event.location = location;
-      if (date) event.date = date;
-      if (time) event.time = time;
+      // Tentukan nilai baru (ambil dari request ATAU nilai lama)
+      const newTitle = title || event.title;
+      const newDesc = description || event.description;
+      const newLoc = location || event.location;
+      const newDate = date || event.date;
+      const newTime = time || event.time;
+      const newPrice = price !== undefined ? price : event.price;
+      const newCategory = category || event.category;
+      const newImageUrl = imageUrl || event.imageUrl;
       
-      // Update capacity dan availableTickets
+      let newCapacity = event.capacity;
+      let newAvailable = event.available_tickets;
+
       if (capacity) {
         const difference = capacity - event.capacity;
-        event.capacity = capacity;
-        event.availableTickets += difference;
+        newCapacity = capacity;
+        newAvailable = event.available_tickets + difference;
       }
+
+      // ✅ Logika Update SQL
+      await pool.query(
+        `UPDATE events SET 
+         title = ?, description = ?, location = ?, date = ?, time = ?, 
+         capacity = ?, available_tickets = ?, price = ?, category = ?, 
+         image_url = ?, updated_at = NOW() 
+         WHERE id = ?`,
+        [
+          newTitle, newDesc, newLoc, newDate, newTime, 
+          newCapacity, newAvailable, newPrice, newCategory, 
+          newImageUrl, eventId
+        ]
+      );
       
-      if (price !== undefined) event.price = price;
-      if (category) event.category = category;
-      if (imageUrl) event.imageUrl = imageUrl;
+      const [updatedRows] = await pool.query('SELECT * FROM events WHERE id = ?', [eventId]);
 
-      // Save changes
-      await event.save();
-
-      // Return updated event
       callback(null, {
         success: true,
         message: 'Event updated successfully',
-        event: {
-          id: event._id.toString(),
-          title: event.title,
-          description: event.description,
-          location: event.location,
-          date: event.date,
-          time: event.time,
-          capacity: event.capacity,
-          availableTickets: event.availableTickets,
-          price: event.price,
-          category: event.category,
-          imageUrl: event.imageUrl,
-          createdAt: event.createdAt.toISOString(),
-          updatedAt: event.updatedAt.toISOString()
-        }
+        event: formatEvent(updatedRows[0])
       });
       
     } catch (error) {
-      callback(null, {
-        success: false,
-        message: error.message,
-        event: null
-      });
+      callback(null, { success: false, message: error.message, event: null });
     }
   }
 
-  /**
-   * DELETE EVENT
-   * Hapus event
-   */
   async deleteEvent(call, callback) {
     try {
       const { eventId } = call.request;
+      // ✅ Logika Delete SQL
+      const [result] = await pool.query('DELETE FROM events WHERE id = ?', [eventId]);
 
-      // Hapus event
-      const event = await Event.findByIdAndDelete(eventId);
-
-      if (!event) {
-        return callback(null, {
-          success: false,
-          message: 'Event not found'
-        });
+      if (result.affectedRows === 0) {
+        return callback(null, { success: false, message: 'Event not found' });
       }
 
-      callback(null, {
-        success: true,
-        message: 'Event deleted successfully'
-      });
+      callback(null, { success: true, message: 'Event deleted successfully' });
       
     } catch (error) {
-      callback(null, {
-        success: false,
-        message: error.message
-      });
+      // Tangani error foreign key (jika tiket masih ada)
+      if (error.code === 'ER_ROW_IS_REFERENCED_2') {
+         return callback(null, { success: false, message: 'Cannot delete event. Tickets are still associated with it.' });
+      }
+      callback(null, { success: false, message: error.message });
     }
   }
 }
 
-// Export instance
-module.exports = new EventController();
+export default new EventController();

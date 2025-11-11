@@ -2,43 +2,62 @@ syntax = "proto3";
 
 package event;
 
-// EVENT SERVICE
 service EventService {
-  rpc GetAllEvents (Empty) returns (EventListResponse);
-  rpc GetEvent (EventIdRequest) returns (EventResponse);
+  // Event Management
   rpc CreateEvent (CreateEventRequest) returns (EventResponse);
+  rpc GetEvent (GetEventRequest) returns (EventResponse);
+  rpc GetAllEvents (GetAllEventsRequest) returns (EventListResponse);
   rpc UpdateEvent (UpdateEventRequest) returns (EventResponse);
-  rpc DeleteEvent (EventIdRequest) returns (DeleteResponse);
-}
-
-// TICKET SERVICE
-service TicketService {
-  rpc GetAllTickets (Empty) returns (TicketListResponse);
-  rpc GetTicketsByUser (UserIdRequest) returns (TicketListResponse);
+  rpc DeleteEvent (DeleteEventRequest) returns (DeleteResponse);
+  
+  // Ticket Management
   rpc CreateTicket (CreateTicketRequest) returns (TicketResponse);
-  rpc DeleteTicket (TicketIdRequest) returns (DeleteResponse);
+  rpc GetTicket (GetTicketRequest) returns (TicketResponse);
+  rpc GetTicketsByUser (GetTicketsByUserRequest) returns (TicketListResponse);
+  rpc GetTicketsByEvent (GetTicketsByEventRequest) returns (TicketListResponse);
+  rpc UpdateTicketStatus (UpdateTicketStatusRequest) returns (TicketResponse);
+  rpc ValidateTicket (ValidateTicketRequest) returns (ValidateTicketResponse);
 }
 
-// MESSAGE DEFINITIONS
-message Empty {}
-
-message EventIdRequest {
-  string id = 1;
-}
-
+// Event Messages
 message CreateEventRequest {
-  string name = 1;
-  string date = 2;
+  string title = 1;
+  string description = 2;
   string location = 3;
-  string description = 4;
+  string date = 4;
+  string time = 5;
+  int32 capacity = 6;
+  double price = 7;
+  string category = 8;
+  string imageUrl = 9;
+}
+
+message GetEventRequest {
+  string eventId = 1;
+}
+
+message GetAllEventsRequest {
+  int32 page = 1;
+  int32 limit = 2;
+  string category = 3;
+  string search = 4;
 }
 
 message UpdateEventRequest {
-  string id = 1;
-  string name = 2;
-  string date = 3;
+  string eventId = 1;
+  string title = 2;
+  string description = 3;
   string location = 4;
-  string description = 5;
+  string date = 5;
+  string time = 6;
+  int32 capacity = 7;
+  double price = 8;
+  string category = 9;
+  string imageUrl = 10;
+}
+
+message DeleteEventRequest {
+  string eventId = 1;
 }
 
 message EventResponse {
@@ -48,30 +67,57 @@ message EventResponse {
 }
 
 message EventListResponse {
-  repeated Event events = 1;
+  bool success = 1;
+  string message = 2;
+  repeated Event events = 3;
+  int32 total = 4;
+  int32 page = 5;
+  int32 limit = 6;
 }
 
 message Event {
   string id = 1;
-  string name = 2;
-  string date = 3;
+  string title = 2;
+  string description = 3;
   string location = 4;
-  string description = 5;
+  string date = 5;
+  string time = 6;
+  int32 capacity = 7;
+  int32 availableTickets = 8;
+  double price = 9;
+  string category = 10;
+  string imageUrl = 11;
+  string createdAt = 12;
+  string updatedAt = 13;
 }
 
-// TICKET MESSAGES
-message UserIdRequest {
-  string userId = 1;
-}
-
-message TicketIdRequest {
-  string id = 1;
-}
-
+// Ticket Messages
 message CreateTicketRequest {
   string eventId = 1;
   string userId = 2;
   int32 quantity = 3;
+  double totalPrice = 4;
+}
+
+message GetTicketRequest {
+  string ticketId = 1;
+}
+
+message GetTicketsByUserRequest {
+  string userId = 1;
+}
+
+message GetTicketsByEventRequest {
+  string eventId = 1;
+}
+
+message UpdateTicketStatusRequest {
+  string ticketId = 1;
+  string status = 2;
+}
+
+message ValidateTicketRequest {
+  string ticketCode = 1;
 }
 
 message TicketResponse {
@@ -81,15 +127,28 @@ message TicketResponse {
 }
 
 message TicketListResponse {
-  repeated Ticket tickets = 1;
+  bool success = 1;
+  string message = 2;
+  repeated Ticket tickets = 3;
+}
+
+message ValidateTicketResponse {
+  bool success = 1;
+  string message = 2;
+  bool isValid = 3;
+  Ticket ticket = 4;
 }
 
 message Ticket {
   string id = 1;
-  string eventId = 2;
-  string userId = 3;
-  int32 quantity = 4;
-  string code = 5;
+  string ticketCode = 2;
+  string eventId = 3;
+  string userId = 4;
+  int32 quantity = 5;
+  double totalPrice = 6;
+  string status = 7;
+  string purchaseDate = 8;
+  Event event = 9;
 }
 
 message DeleteResponse {

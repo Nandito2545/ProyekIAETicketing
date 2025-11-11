@@ -1,16 +1,28 @@
-const mongoose = require('mongoose');
+import mysql from 'mysql2/promise'; // ✅ Ganti dari mongoose
+import dotenv from 'dotenv';
+dotenv.config();
 
-const connectDB = async () => {
+// ✅ Gunakan MySQL Pool, sama seperti service lain
+const pool = mysql.createPool({
+  host: process.env.DB_HOST || 'localhost',
+  user: process.env.DB_USER || 'root',
+  password: process.env.DB_PASSWORD || '',
+  database: process.env.DB_NAME || 'ticket-konser',
+  waitForConnections: true,
+  connectionLimit: 10,
+  queueLimit: 0,
+});
+
+// Test koneksi
+(async () => {
   try {
-    await mongoose.connect(process.env.MONGODB_URI, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-    });
-    console.log('MongoDB connected for Event-Ticket Service');
+    const connection = await pool.getConnection();
+    console.log('✅ Event Service connected to MySQL database');
+    connection.release();
   } catch (error) {
-    console.error('MongoDB connection error:', error);
+    console.error('❌ MySQL connection error:', error.message);
     process.exit(1);
   }
-};
+})();
 
-module.exports = connectDB;
+export default pool; // ✅ Ekspor pool-nya

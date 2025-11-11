@@ -1,4 +1,4 @@
-const crypto = require('crypto');
+import crypto from 'crypto'; // ✅ PERBAIKAN: Ganti 'require' menjadi 'import'
 
 /**
  * Generate unique ticket code
@@ -15,4 +15,4 @@ const generateTicketCode = () => {
   return `TKT-${year}${month}${day}-${randomPart}`;
 };
 
-module.exports = generateTicketCode;
+export default generateTicketCode; // ✅ PERBAIKAN: Ganti 'module.exports' menjadi 'export default'

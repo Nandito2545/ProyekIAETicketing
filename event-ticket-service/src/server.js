@@ -6,8 +6,6 @@ import protoLoader from '@grpc/proto-loader';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
-// Import modules
-import pool from './db.js'; // db.js sekarang mengekspor pool
 import eventController from './controllers/eventController.js';
 import ticketController from './controllers/ticketController.js';
 
@@ -63,7 +61,6 @@ const PORT = process.env.PORT || 50052;
 
 const startServer = async () => {
   try {
-    // Koneksi DB sudah dites di db.js, jadi langsung bind
     server.bindAsync(
       `0.0.0.0:${PORT}`,
       grpc.ServerCredentials.createInsecure(),
@@ -77,7 +74,7 @@ const startServer = async () => {
         console.log('═══════════════════════════════════════════');
         console.log('✅ Event-Ticket Service is running!');
         console.log('📡 gRPC Server listening on port:', port);
-        console.log('🗄️  Database: Connected (MySQL)'); // ✅ Konfirmasi MySQL
+        console.log('🗄️  Database: Connected (MySQL)'); 
         console.log('⏰ Started at:', new Date().toLocaleString());
         console.log('═══════════════════════════════════════════');
       }

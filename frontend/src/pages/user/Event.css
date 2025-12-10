@@ -116,3 +116,22 @@
   font-weight: 600;
   padding: 6px 10px;
 }
+
+/* ... (semua CSS Anda yang sudah ada) ... */
+
+/* ✅ TAMBAHAN: Pastikan card bisa menampung badge */
+.event-card {
+  position: relative; /* Diperlukan agar badge bisa di-posisikan */
+}
+
+/* ✅ TAMBAHAN: Styling untuk badge status di pojok */
+.event-card-status {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 2;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 6px 10px;
+  border-radius: 6px;
+}

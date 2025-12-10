@@ -1,8 +1,7 @@
-import mysql from 'mysql2/promise'; // ✅ Ganti dari mongoose
+import mysql from 'mysql2/promise'; 
 import dotenv from 'dotenv';
 dotenv.config();
 
-// ✅ Gunakan MySQL Pool, sama seperti service lain
 const pool = mysql.createPool({
   host: process.env.DB_HOST || 'localhost',
   user: process.env.DB_USER || 'root',
@@ -25,4 +24,4 @@ const pool = mysql.createPool({
   }
 })();
 
-export default pool; // ✅ Ekspor pool-nya
+export default pool;

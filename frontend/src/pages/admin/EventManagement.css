@@ -27,10 +27,12 @@
 
 .admin-table th,
 .admin-table td {
-  padding: 15px;
+  padding: 12px 15px; /* Ubah padding agar lebih pas */
   text-align: left;
   border-bottom: 1px solid #eee;
   color: #333;
+  /* ✅ PERBAIKAN: Atur perataan vertikal */
+  vertical-align: middle;
 }
 
 .admin-table th {
@@ -62,4 +64,14 @@
 }
 .btn-action.delete {
   color: #dc3545;
+}
+
+/* ✅ TAMBAHAN: Style untuk gambar di tabel */
+.event-table-image {
+  width: 100px;
+  height: 60px;
+  object-fit: cover;
+  border-radius: 6px;
+  border: 1px solid #ddd;
+  background-color: #f0f0f0;
 }

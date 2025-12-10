@@ -1,22 +1,61 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Trash2 } from "lucide-react";
+import { Spinner, Alert } from "react-bootstrap";
+import { getAllUsers, deleteUser } from "../../services/userService"; // ✅ Import API
 import "./UserManagement.css";
-import "./EventManagement.css"; // Menggunakan ulang style tabel dari EventManagement
+import "./EventManagement.css";
 
 const UserManagement = () => {
   
-  // CATATAN: API UNTUK GET ALL USERS TIDAK ADA DI BACKEND ANDA.
-  // Data ini adalah MOCK (data palsu) untuk keperluan UI.
-  const mockUsers = [
-    { id: 1, name: "Nandito Maulana Yedikar", email: "nandito.my@mail.id", active: "Just now", avatar: "https://via.placeholder.com/40?text=N" },
-    { id: 2, name: "Ahmad Alvin Shofa", email: "alvin.shofa.my@mail.id", active: "Just now", avatar: "https://via.placeholder.com/40?text=A" },
-    { id: 3, name: "Ismiati Andini", email: "ismiati.a@mail.id", active: "Just now", avatar: "https://via.placeholder.com/40?text=I" },
-    { id: 4, name: "Rizky Maulana", email: "rizky.m@mail.id", active: "Just now", avatar: "https://via.placeholder.com/40?text=R" },
-    { id: 5, name: "Rius Farullah", email: "rius.f.my@mail.id", active: "Just now", avatar: "https://via.placeholder.com/40?text=R" },
-  ];
-  
-  const handleUserDelete = (userId, userName) => {
-    alert(`API untuk Hapus User (ID: ${userId}) belum terimplementasi di backend.`);
+  // ✅ Ganti mockUsers dengan state asli
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  // ✅ Panggil API saat halaman dimuat
+  useEffect(() => {
+    fetchUsers();
+  }, []);
+
+  const fetchUsers = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const res = await getAllUsers();
+      if (res.success) {
+        setUsers(res.users || []);
+      } else {
+        setError(res.message || "Failed to fetch users.");
+      }
+    } catch (err) {
+      console.error(err);
+      setError("An error occurred. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // ✅ Perbarui fungsi Hapus
+  const handleUserDelete = async (userId, userName) => {
+    if (window.confirm(`Are you sure you want to delete user "${userName}"? This is permanent.`)) {
+      try {
+        const res = await deleteUser(userId);
+        if (res.success) {
+          alert(res.message);
+          fetchUsers(); // Refresh daftar user
+        } else {
+          alert(`Error: ${res.message}`);
+        }
+      } catch (err) {
+        alert(`Failed to delete: ${err.message}`);
+      }
+    }
+  };
+
+  // Helper untuk format tanggal (jika diperlukan)
+  const formatDate = (dateString) => {
+    if (!dateString) return 'N/A';
+    return new Date(dateString).toLocaleDateString('id-ID');
   };
 
   return (
@@ -26,45 +65,58 @@ const UserManagement = () => {
       <input 
         type="text" 
         className="user-search" 
-        placeholder="Search users..." 
+        placeholder="Search users... (Not implemented)" 
       />
 
       <div className="admin-table-wrapper">
-        <table className="admin-table">
-          <thead>
-            <tr>
-              <th>Name</th>
-              <th>Email</th>
-              <th>Last Active</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {mockUsers.map((user) => (
-              <tr key={user.id}>
-                <td>
-                  <img 
-                    src={user.avatar} 
-                    alt={user.name} 
-                    style={{width: '32px', height: '32px', borderRadius: '50%', marginRight: '10px'}} 
-                  />
-                  {user.name}
-                </td>
-                <td>{user.email}</td>
-                <td>{user.active}</td>
-                <td className="action-buttons">
-                  <button 
-                    className="btn-action delete" 
-                    title="Delete User (Not Implemented)"
-                    onClick={() => handleUserDelete(user.id, user.name)}
-                  >
-                    <Trash2 size={18} />
-                  </button>
-                </td>
+        {loading && <div className="text-center p-5"><Spinner animation="border" /></div>}
+        
+        {error && <Alert variant="danger">{error}</Alert>}
+        
+        {!loading && !error && (
+          <table className="admin-table">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Phone</th>
+                <th>Role</th>
+                <th>Actions</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {users.map((user) => (
+                <tr key={user.id}>
+                  <td>
+                    {/* ✅ PERBAIKAN: alt="" (kosong) untuk hapus nama duplikat */}
+                    <img 
+                      src={`https://ui-avatars.com/api/?name=${user.username}&background=random`} 
+                      alt="" 
+                      style={{width: '32px', height: '32px', borderRadius: '50%', marginRight: '10px'}} 
+                    />
+                    {user.username}
+                  </td>
+                  <td>{user.email || 'N/A'}</td>
+                  <td>{user.phone || 'N/A'}</td>
+                  <td>
+                    <span className={`badge ${user.role === 'admin' ? 'bg-success' : 'bg-secondary'}`}>
+                      {user.role}
+                    </span>
+                  </td>
+                  <td className="action-buttons">
+                    <button 
+                      className="btn-action delete" 
+                      title="Delete User"
+                      onClick={() => handleUserDelete(user.id, user.username)}
+                    >
+                      <Trash2 size={18} />
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
       </div>
     </div>
   );

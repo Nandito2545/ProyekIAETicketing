@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from "react";
 import "./Dashboard.css"; 
 import { getAllEvents } from "../../services/eventService";
+// ✅ 1. Import service 'getAllUsers'
+import { getAllUsers } from "../../services/userService"; 
 import { Spinner, Alert } from "react-bootstrap";
 
-// Komponen Card Statistik
+// Komponen Card Statistik (tidak berubah)
 const StatCard = ({ title, value, colorClass = "text-dark" }) => (
   <div className="col-md-4">
     <div className="stat-card">
@@ -18,11 +20,11 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   
-  // ✅ State baru untuk statistik
+  // ✅ 2. Ubah 'newUser' menjadi 'userActive'
   const [stats, setStats] = useState({
     totalSales: 0,
     ticketsSold: 0,
-    newUser: "N/A", // Tidak bisa diimplementasikan
+    userActive: 0, // Diubah dari N/A
   });
 
   useEffect(() => {
@@ -33,18 +35,21 @@ const Dashboard = () => {
     try {
       setLoading(true);
       setError(null);
-      // Ambil SEMUA event (limit tinggi) untuk kalkulasi
-      const res = await getAllEvents({ page: 1, limit: 1000 }); 
       
-      if (res.success && res.events) {
-        setEvents(res.events);
+      // ✅ 3. Panggil KEDUA API secara bersamaan
+      const [eventRes, userRes] = await Promise.all([
+        getAllEvents({ page: 1, limit: 1000 }), // Ambil data event
+        getAllUsers()                             // Ambil data user
+      ]);
+      
+      // --- Logika untuk Event & Penjualan ---
+      if (eventRes.success && eventRes.events) {
+        setEvents(eventRes.events);
         
-        // ✅ KALKULASI STATISTIK (Anti-NaN)
         let calculatedSales = 0;
         let calculatedSold = 0;
 
-        res.events.forEach(event => {
-          // Pastikan semua nilai adalah angka
+        eventRes.events.forEach(event => {
           const capacity = Number(event.capacity) || 0;
           const available = Number(event.available_tickets) || 0;
           const price = Number(event.price) || 0;
@@ -54,14 +59,25 @@ const Dashboard = () => {
           calculatedSales += sold * price;
         });
 
+        // --- ✅ 4. Logika BARU untuk User Active ---
+        let calculatedUserActive = 0;
+        if (userRes.success && userRes.users) {
+          // Filter untuk menghitung user dengan role 'user'
+          const activeUsers = userRes.users.filter(user => user.role === 'user');
+          calculatedUserActive = activeUsers.length;
+        } else {
+          console.error("Failed to fetch users:", userRes.message);
+        }
+
+        // ✅ 5. Set state gabungan
         setStats({
           totalSales: calculatedSales,
           ticketsSold: calculatedSold,
-          newUser: "N/A", // Service 'GetAllUsers' tidak ada di backend
+          userActive: calculatedUserActive, // Set data baru
         });
 
       } else {
-        setError(res.message || "Failed to fetch event data.");
+        setError(eventRes.message || "Failed to fetch event data.");
       }
     } catch (err) {
       console.error("Failed to fetch dashboard data:", err);
@@ -98,9 +114,10 @@ const Dashboard = () => {
           value={stats.ticketsSold.toLocaleString('id-ID')} 
           colorClass="text-primary" 
         />
+        {/* ✅ 6. PERBAIKAN: Tampilkan 'User Active' */}
         <StatCard 
-          title="New User" 
-          value={stats.newUser} 
+          title="User Active" 
+          value={stats.userActive.toLocaleString('id-ID')} 
         />
       </div>
 
@@ -117,7 +134,6 @@ const Dashboard = () => {
             </tr>
           </thead>
           <tbody>
-            {/* Tampilkan 5 event pertama */}
             {events.slice(0, 5).map((event) => {
               // Kalkulasi aman untuk anti-NaN
               const capacity = Number(event.capacity) || 0;

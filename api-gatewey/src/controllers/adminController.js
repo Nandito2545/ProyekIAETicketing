@@ -11,6 +11,6 @@ const getDashboardStats = (req, res) => { // ✅ PERBAIKAN: Deklarasikan sebagai
   });
 };
 
-export default { // ✅ PERBAIKAN: Ekspor sebagai default
+export default {
   getDashboardStats
 };

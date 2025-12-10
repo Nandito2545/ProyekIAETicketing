@@ -1,41 +1,41 @@
 import React, { useState, useEffect } from "react";
 import { Navbar, Nav, Container, Button, Dropdown, Image } from "react-bootstrap";
 import { Link, useNavigate } from "react-router-dom";
-// ✅ 1. Import ikon User dan Shield
 import { User, Shield } from "lucide-react"; 
 
 const NavBar = () => {
   const navigate = useNavigate();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [userRole, setUserRole] = useState(null); // ✅ 2. State baru untuk role
+  const [userRole, setUserRole] = useState(null);
+  const [username, setUsername] = useState(null); // ✅ 1. State baru untuk nama
 
   useEffect(() => {
     const storedUsername = localStorage.getItem("username");
-    const storedRole = localStorage.getItem("role"); // ✅ 3. Ambil role
+    const storedRole = localStorage.getItem("role");
     if (storedUsername) {
       setIsLoggedIn(true);
-      setUserRole(storedRole); // ✅ 4. Simpan role
+      setUserRole(storedRole);
+      setUsername(storedUsername); // ✅ 2. Simpan nama ke state
     }
-  }, []); // Hanya cek saat komponen dimuat
+  }, []); 
 
   const handleLogout = () => {
     localStorage.removeItem("username");
     localStorage.removeItem("role");
-    localStorage.removeItem("userId"); // ✅ 5. Hapus userId juga
+    localStorage.removeItem("userId");
     localStorage.removeItem("token");
 
     setIsLoggedIn(false);
     setUserRole(null);
+    setUsername(null); // ✅ 3. Hapus nama dari state
 
     navigate("/SignIn");
   };
 
-  // ✅ 6. Logika untuk menampilkan ikon
   const ProfileIcon = () => {
     if (userRole === 'admin') {
-      return <Shield size={20} />; // Ikon untuk Admin
+      return <Shield size={20} />; 
     }
-    // Default ikon untuk 'user'
     return <User size={20} />; 
   };
 
@@ -54,7 +54,8 @@ const NavBar = () => {
           </Nav>
         </Navbar.Collapse>
 
-        <div className="d-flex gap-2">
+        {/* ✅ PERBAIKAN: Bungkus div dengan 'align-items-center' */}
+        <div className="d-flex gap-2 align-items-center">
           {!isLoggedIn ? (
             <>
               <Button as={Link} to="/SignIn" variant="outline-dark" size="sm">
@@ -65,27 +66,39 @@ const NavBar = () => {
               </Button>
             </>
           ) : (
-            <Dropdown align="end">
-              <Dropdown.Toggle
-                variant="light"
-                id="dropdown-profile"
-                className="d-flex align-items-center justify-content-center" // ✅ 7. Styling
-                style={{
-                  width: "40px",
-                  height: "40px",
-                  padding: 0,
-                  borderRadius: "50%",
-                  border: "1px solid #ccc",
-                }}
-              >
-                {/* ✅ 8. Ganti <img> dengan <ProfileIcon /> */}
-                <ProfileIcon />
-              </Dropdown.Toggle>
+            // ✅ PERBAIKAN: Tambahkan <span> untuk nama
+            <>
+              {/* Tampilkan nama di layar besar, sembunyikan di mobile */}
+              <span className="fw-semibold text-dark me-2 d-none d-lg-block">
+                {username}
+              </span>
 
-              <Dropdown.Menu>
-                <Dropdown.Item onClick={handleLogout}>Logout</Dropdown.Item>
-              </Dropdown.Menu>
-            </Dropdown>
+              <Dropdown align="end">
+                <Dropdown.Toggle
+                  variant="light"
+                  id="dropdown-profile"
+                  className="d-flex align-items-center justify-content-center"
+                  style={{
+                    width: "40px",
+                    height: "40px",
+                    padding: 0,
+                    borderRadius: "50%",
+                    border: "1px solid #ccc",
+                  }}
+                >
+                  <ProfileIcon />
+                </Dropdown.Toggle>
+
+                <Dropdown.Menu>
+                  {/* Tampilkan nama di menu dropdown (hanya di mobile) */}
+                  <Dropdown.Header className="d-lg-none">
+                    Signed in as: <br/>
+                    <strong>{username}</strong>
+                  </Dropdown.Header>
+                  <Dropdown.Item onClick={handleLogout}>Logout</Dropdown.Item>
+                </Dropdown.Menu>
+              </Dropdown>
+            </>
           )}
         </div>
       </Container>

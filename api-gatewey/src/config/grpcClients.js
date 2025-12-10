@@ -26,7 +26,7 @@ const loadProto = (filename) => {
 const userProto = loadProto('user.proto');
 const eventProto = loadProto('event.proto');
 const paymentProto = loadProto('payment.proto');
-const notificationProto = loadProto('notification.proto');
+const notificationProto = loadProto('notification.proto'); // ✅ File ini sudah benar
 
 // Create gRPC clients
 export const userClient = new userProto.user.UserService(

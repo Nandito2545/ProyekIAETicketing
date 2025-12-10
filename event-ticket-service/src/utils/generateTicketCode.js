@@ -1,9 +1,5 @@
-import crypto from 'crypto'; // ✅ PERBAIKAN: Ganti 'require' menjadi 'import'
+import crypto from 'crypto'; 
 
-/**
- * Generate unique ticket code
- * Format: TKT-YYYYMMDD-RANDOM8
- */
 const generateTicketCode = () => {
   const date = new Date();
   const year = date.getFullYear();
@@ -15,4 +11,4 @@ const generateTicketCode = () => {
   return `TKT-${year}${month}${day}-${randomPart}`;
 };
 
-export default generateTicketCode; // ✅ PERBAIKAN: Ganti 'module.exports' menjadi 'export default'
+export default generateTicketCode;

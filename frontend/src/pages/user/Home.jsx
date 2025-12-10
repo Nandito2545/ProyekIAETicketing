@@ -53,7 +53,7 @@ const Home = () => {
         <div className="hero-overlay"></div>
         <div className="hero-content position-relative">
           <h1 className="fw-bold display-4 mb-3">
-            Temukan lagumu, rasakan energinya. <br /> Tiketnya, kami yang urus.
+            Semua Acara Favorit Anda, <br />  Hanya Sejauh Satu Klik.
           </h1>
           <Link to="/Event">
             <Button variant="light" className="px-4 py-2 fw-semibold">

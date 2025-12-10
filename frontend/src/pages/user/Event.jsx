@@ -3,25 +3,27 @@ import { Link } from "react-router-dom";
 import "./Event.css";
 import { FaSearch } from "react-icons/fa";
 import { getAllEvents } from "../../services/eventService";
+// ✅ 1. Import helper gambar
 import { getImageUrl, handleImageError } from "../../utils/imageUtils";
-
-// Fungsi helper untuk status event (Poin 9)
+import { Spinner, Alert } from "react-bootstrap"; // Import
+ 
+// ✅ 2. FUNGSI BARU: Untuk menentukan status event
 const getEventStatus = (event) => {
-  // ✅ PERBAIKAN: Gunakan available_tickets (snake_case)
+  // Gunakan snake_case (available_tickets) sesuai data dari backend
   if (event.available_tickets === 0) {
-    return { text: "Sold Out", class: "bg-danger" };
+    return { text: "Sold Out", class: "bg-danger text-white" };
   }
   
   try {
     const eventDateTime = new Date(`${event.date}T${event.time}`);
     if (eventDateTime < new Date()) {
-      return { text: "Event Ended", class: "bg-secondary" };
+      return { text: "Event Ended", class: "bg-secondary text-white" };
     }
   } catch (e) {
     console.error("Invalid date format for event:", event.id, e);
   }
 
-  return null; // Available
+  return null; // null berarti "Available" dan tidak perlu badge
 };
 
 
@@ -32,16 +34,18 @@ const Event = () => {
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("");
 
+  // Fetch events from API
   useEffect(() => {
     fetchEvents();
-  }, [category, search]); // ✅ fetch ulang saat search atau category berubah
+  }, [category, search]); // fetch ulang saat kategori atau pencarian berubah
 
   const fetchEvents = async () => {
     try {
       setLoading(true);
+      setError(null); // Reset error setiap kali fetch
       const response = await getAllEvents({
         page: 1,
-        limit: 20, // Tampilkan 20 event
+        limit: 20,
         category: category,
         search: search
       });
@@ -68,9 +72,7 @@ const Event = () => {
     return (
       <div className="event-page p-5" style={{ minHeight: '60vh' }}>
         <div className="text-center">
-          <div className="spinner-border text-primary" role="status">
-            <span className="visually-hidden">Loading...</span>
-          </div>
+          <Spinner animation="border" text="primary" />
           <p className="mt-2">Loading events...</p>
         </div>
       </div>
@@ -80,9 +82,9 @@ const Event = () => {
   if (error) {
     return (
       <div className="event-page p-5" style={{ minHeight: '60vh' }}>
-        <div className="alert alert-danger" role="alert">
+        <Alert variant="danger" role="alert">
           {error}
-        </div>
+        </Alert>
       </div>
     );
   }
@@ -127,26 +129,27 @@ const Event = () => {
         ) : (
           <div className="event-grid">
             {events.map((event) => {
+              // ✅ 3. Tentukan status untuk setiap event
               const status = getEventStatus(event);
               
               return (
                 <Link 
                   to={`/event/${event.id}`} 
                   key={event.id}
+                  // ✅ 4. Buat kartu non-available tidak bisa diklik
                   className={`text-decoration-none ${status ? 'pe-none' : ''}`}
                   style={status ? { opacity: 0.7, cursor: 'not-allowed' } : {}}
-                  // Mencegah klik jika event tidak available
-                  onClick={(e) => { if (status) e.preventDefault(); }} 
+                  onClick={(e) => { if (status) e.preventDefault(); }} // Mencegah navigasi
                 >
                   <div className="event-card">
+                    {/* ✅ 5. Tampilkan badge status jika tidak available */}
                     {status && (
                       <span className={`badge ${status.class} event-card-status`}>
                         {status.text}
                       </span>
                     )}
-                    {/* ✅ PERBAIKAN: Gunakan image_url (snake_case) */}
                     <img 
-                      src={getImageUrl(event.image_url)} 
+                      src={getImageUrl(event.image_url)} // Gunakan snake_case
                       alt={event.title}
                       onError={handleImageError}
                     />

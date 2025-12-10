@@ -29,7 +29,7 @@ app.use("/api/events", eventRouter);
 app.use("/api/tickets", ticketRouter);
 app.use("/api/payments", paymentRouter);
 app.use("/api/notifications", notificationRouter);
-app.use("/api/admin", adminRouter); // ✅ PERBAIKAN: Gunakan rute admin
+app.use("/api/admin", adminRouter); 
 
 // Start server
 const PORT = process.env.PORT || 5000;

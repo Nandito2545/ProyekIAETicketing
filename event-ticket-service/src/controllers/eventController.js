@@ -1,8 +1,5 @@
-import pool from '../db.js'; // ✅ Impor pool MySQL
-import { v4 as uuidv4 } from 'uuid';
+import pool from '../db.js';
 
-// ✅ PERBAIKAN: Buat helper 'formatEvent'
-// Ini akan memetakan snake_case (DB) ke camelCase (gRPC/.proto)
 const formatEvent = (event) => {
   if (!event) return null;
   return {
@@ -13,12 +10,12 @@ const formatEvent = (event) => {
     date: event.date,
     time: event.time,
     capacity: event.capacity,
-    availableTickets: event.available_tickets, // <- Mapping
+    availableTickets: event.available_tickets, 
     price: event.price,
     category: event.category,
-    imageUrl: event.image_url, // <- Mapping
-    createdAt: event.created_at, // <- Mapping
-    updatedAt: event.updated_at  // <- Mapping
+    imageUrl: event.image_url, 
+    createdAt: event.created_at, 
+    updatedAt: event.updated_at
   };
 };
 
@@ -36,7 +33,7 @@ class EventController {
          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())`,
         [
           title, description, location, date, time, 
-          capacity, capacity, // available_tickets = capacity
+          capacity, capacity, 
           price, category, imageUrl || ''
         ]
       );
@@ -47,7 +44,7 @@ class EventController {
       callback(null, {
         success: true,
         message: 'Event created successfully',
-        event: formatEvent(rows[0]) // ✅ Gunakan helper format
+        event: formatEvent(rows[0]) 
       });
       
     } catch (error) {
@@ -67,7 +64,7 @@ class EventController {
       callback(null, {
         success: true,
         message: 'Event retrieved successfully',
-        event: formatEvent(rows[0]) // ✅ Gunakan helper format
+        event: formatEvent(rows[0]) 
       });
       
     } catch (error) {
@@ -108,7 +105,7 @@ class EventController {
       callback(null, {
         success: true,
         message: 'Events retrieved successfully',
-        events: events.map(formatEvent), // ✅ Gunakan helper format
+        events: events.map(formatEvent), 
         total,
         page,
         limit
@@ -132,7 +129,6 @@ class EventController {
       }
       const event = rows[0];
 
-      // Tentukan nilai baru (ambil dari request ATAU nilai lama)
       const newTitle = title || event.title;
       const newDesc = description || event.description;
       const newLoc = location || event.location;
@@ -145,14 +141,11 @@ class EventController {
       let newCapacity = event.capacity;
       let newAvailable = event.available_tickets;
 
-      // ✅ PERBAIKAN: Cek 'undefined' agar angka 0 bisa diproses
       if (capacity !== undefined) {
         const difference = capacity - event.capacity;
         newCapacity = capacity;
         newAvailable = event.available_tickets + difference;
-        // Pastikan available tickets tidak negatif
         if (newAvailable < 0) newAvailable = 0;
-        // Pastikan available tickets tidak melebihi kapasitas baru
         if (newAvailable > newCapacity) newAvailable = newCapacity;
       }
 
@@ -174,7 +167,7 @@ class EventController {
       callback(null, {
         success: true,
         message: 'Event updated successfully',
-        event: formatEvent(updatedRows[0]) // ✅ Gunakan helper format
+        event: formatEvent(updatedRows[0]) 
       });
       
     } catch (error) {

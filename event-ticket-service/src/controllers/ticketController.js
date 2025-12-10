@@ -1,11 +1,9 @@
 import pool from '../db.js';
 import generateTicketCode from '../utils/generateTicketCode.js';
 
-// ✅ PERBAIKAN: Helper format untuk memetakan DB ke gRPC
 const formatTicket = (ticket) => {
   if (!ticket) return null;
   
-  // 1. Buat objek event (nested)
   const event = {
     id: ticket.event_id.toString(),
     title: ticket.event_title,
@@ -14,25 +12,24 @@ const formatTicket = (ticket) => {
     date: ticket.event_date,
     time: ticket.event_time,
     capacity: ticket.event_capacity,
-    availableTickets: ticket.event_available_tickets, // Mapping
+    availableTickets: ticket.event_available_tickets,
     price: ticket.event_price,
     category: ticket.event_category,
-    imageUrl: ticket.event_image_url, // Mapping
+    imageUrl: ticket.event_image_url, 
     createdAt: ticket.event_createdAt,
     updatedAt: ticket.event_updatedAt,
   };
   
-  // 2. Buat objek tiket (flat)
   return {
     id: ticket.id.toString(),
-    ticketCode: ticket.ticket_code, // Mapping
+    ticketCode: ticket.ticket_code, 
     eventId: ticket.event_id.toString(),
     userId: ticket.user_id.toString(),
     quantity: ticket.quantity,
-    totalPrice: ticket.total_price, // Mapping
+    totalPrice: ticket.total_price, 
     status: ticket.status,
-    purchaseDate: ticket.purchase_date, // Mapping
-    event: event // Masukkan objek event yang sudah di-nest
+    purchaseDate: ticket.purchase_date, 
+    event: event 
   };
 };
 
@@ -97,7 +94,7 @@ class TicketController {
       callback(null, {
         success: true,
         message: 'Ticket created successfully',
-        ticket: formatTicket(ticketRows[0]) // ✅ Gunakan helper format
+        ticket: formatTicket(ticketRows[0]) 
       });
       
     } catch (error) {
@@ -120,7 +117,7 @@ class TicketController {
       callback(null, {
         success: true,
         message: 'Ticket retrieved successfully',
-        ticket: formatTicket(rows[0]) // ✅ Gunakan helper format
+        ticket: formatTicket(rows[0]) 
       });
       
     } catch (error) {
@@ -139,7 +136,7 @@ class TicketController {
       callback(null, {
         success: true,
         message: 'Tickets retrieved successfully',
-        tickets: tickets.map(formatTicket) // ✅ Gunakan helper format
+        tickets: tickets.map(formatTicket) 
       });
       
     } catch (error) {
@@ -158,7 +155,7 @@ class TicketController {
       callback(null, {
         success: true,
         message: 'Tickets retrieved successfully',
-        tickets: tickets.map(formatTicket) // ✅ Gunakan helper format
+        tickets: tickets.map(formatTicket) 
       });
       
     } catch (error) {
@@ -199,7 +196,7 @@ class TicketController {
       callback(null, {
         success: true,
         message: 'Ticket status updated successfully',
-        ticket: formatTicket(updatedRows[0]) // ✅ Gunakan helper format
+        ticket: formatTicket(updatedRows[0]) 
       });
       
     } catch (error) {
@@ -231,7 +228,7 @@ class TicketController {
         success: true,
         message: isValid ? 'Ticket is valid' : 'Ticket is not valid',
         isValid,
-        ticket: formatTicket(ticket) // ✅ Gunakan helper format
+        ticket: formatTicket(ticket) 
       });
       
     } catch (error) {

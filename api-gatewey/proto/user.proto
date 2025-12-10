@@ -5,11 +5,32 @@ package user;
 service UserService {
   rpc Register (RegisterRequest) returns (RegisterResponse);
   rpc Login (LoginRequest) returns (LoginResponse);
+  
+  rpc GetAllUsers (Empty) returns (UserListResponse);
+  rpc DeleteUser (UserIdRequest) returns (DeleteResponse);
 }
+
+message Empty {}
+
+message UserIdRequest {
+  int32 id = 1;
+}
+
+message UserListResponse {
+  repeated User users = 1;
+}
+
+message DeleteResponse {
+  bool success = 1;
+  string message = 2;
+}
+
 message RegisterRequest {
   string username = 1;
   string password = 2;
   string role = 3;
+  string email = 4;
+  string phone = 5;
 }
 
 message RegisterResponse {
@@ -31,4 +52,6 @@ message User {
   int32 id = 1;
   string username = 2;
   string role = 3;
+  string email = 4;
+  string phone = 5;
 }

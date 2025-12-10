@@ -21,7 +21,6 @@ SET time_zone = "+00:00";
 -- Database: `ticket-konser`
 --
 
-<<<<<<< HEAD
 -- ============================================
 -- TABLE: users
 -- ============================================
@@ -141,5 +140,10 @@ CREATE TABLE `notifications` (
   KEY `idx_read` (`is_read`),
   CONSTRAINT `notifications_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+ALTER TABLE payments
+ADD COLUMN customer_name VARCHAR(255) NULL AFTER payment_method,
+ADD COLUMN customer_email VARCHAR(255) NULL AFTER customer_name,
+ADD COLUMN customer_phone VARCHAR(255) NULL AFTER customer_email;
 
 COMMIT;

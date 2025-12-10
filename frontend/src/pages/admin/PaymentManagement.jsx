@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { getAllPayments } from "../../services/paymentService";
 import { Spinner, Alert } from "react-bootstrap";
-import "./EventManagement.css"; // Menggunakan ulang style tabel
+import "./EventManagement.css";
 
-// Helper untuk Badge Status
 const getStatusBadge = (status) => {
   const styles = {
     success: 'bg-success text-white',
+    paid: 'bg-success text-white', // Tambahkan 'paid'
     pending: 'bg-warning text-dark',
     failed: 'bg-danger text-white',
     cancelled: 'bg-secondary text-white',
@@ -27,14 +27,11 @@ const PaymentManagement = () => {
     try {
       setLoading(true);
       setError(null);
-      const res = await getAllPayments(); // res = { payments: [...] }
+      const res = await getAllPayments();
       
-      // ✅ PERBAIKAN: 
-      // Cek 'res.payments' (dari backend) BUKAN 'res.success'
       if (res.payments) {
         setPayments(res.payments || []);
       } else {
-        // Tampilkan error jika backend mengirim 'success: false'
         setError(res.message || "Failed to fetch payments");
       }
     } catch (err) {
@@ -60,9 +57,10 @@ const PaymentManagement = () => {
               <tr>
                 <th>Transaction ID</th>
                 <th>Event</th>
-                <th>User ID</th>
+                {/* ✅ TAMBAHKAN: Kolom Customer */}
+                <th>Customer Name</th>
+                <th>Customer Email</th>
                 <th>Amount (Rp)</th>
-                <th>Method</th>
                 <th>Status</th>
                 <th>Date</th>
               </tr>
@@ -72,9 +70,10 @@ const PaymentManagement = () => {
                 <tr key={payment.id}>
                   <td>{payment.transaction_id}</td>
                   <td>{payment.event_title}</td>
-                  <td>{payment.user_id}</td>
+                  {/* ✅ TAMBAHKAN: Data Customer */}
+                  <td>{payment.customer_name}</td>
+                  <td>{payment.customer_email}</td>
                   <td>{payment.amount.toLocaleString('id-ID')}</td>
-                  <td>{payment.payment_method}</td>
                   <td>
                     <span className={`badge ${getStatusBadge(payment.status)}`}>
                       {payment.status.toUpperCase()}

@@ -1,7 +1,7 @@
 import express from 'express';
 import midtransClient from 'midtrans-client';
-import { paymentClient, eventClient } from '../config/grpcClients.js';
-import mysql from 'mysql2/promise'; // Pastikan 'mysql2' sudah di-instal
+import { paymentClient, eventClient, notificationClient } from '../config/grpcClients.js';
+import mysql from 'mysql2/promise';
 
 const router = express.Router();
 
@@ -10,7 +10,6 @@ const coreApi = new midtransClient.CoreApi({
   serverKey: process.env.MIDTRANS_SERVER_KEY,
 });
 
-// Buat pool MySQL di API Gateway (untuk webhook)
 const pool = mysql.createPool({
   host: process.env.DB_HOST || 'localhost',
   user: process.env.DB_USER || 'root',
@@ -22,32 +21,24 @@ const pool = mysql.createPool({
 });
 
 
-/**
- * RUTE: GET / (Admin: Get All Payments)
- */
+//GET ALL PAYMENTS
 router.get('/', (req, res) => {
-  // TODO: Tambahkan auth middleware admin
   paymentClient.GetAllPayments({}, (err, response) => {
     if (err) {
       console.error('GetAllPayments gRPC error:', err);
       return res.status(500).json({ success: false, message: err.message, payments: [] });
     }
-    res.json(response);
+    res.json(response); // Harusnya { payments: [...] }
   });
 });
 
 
-/**
- * RUTE: PROSES PEMBAYARAN (Frontend memanggil ini)
- */
+//PROSES PEMBAYARAN
 router.post('/process', (req, res) => {
-  // ✅ AMBIL: Data customer dari body
   const { 
     user_id, event_id, amount, method, ticket_id, 
     fullName, email, phone 
   } = req.body;
-
-  console.log('📨 Payment request received:', { user_id, ticket_id, fullName, email });
 
   if (!user_id || !event_id || !amount || !ticket_id) {
     return res.status(400).json({
@@ -56,7 +47,6 @@ router.post('/process', (req, res) => {
     });
   }
 
-  // Panggil gRPC service 'ProcessPayment'
   paymentClient.ProcessPayment(
     {
       user_id: user_id.toString(),
@@ -64,26 +54,21 @@ router.post('/process', (req, res) => {
       amount: parseFloat(amount),
       method: method || 'other',
       ticket_id: ticket_id.toString(),
-      // ✅ KIRIM: Data customer ke gRPC
-      full_name: fullName,
-      email: email,
-      phone: phone
+      customer_name: fullName,
+      customer_email: email,
+      customer_phone: phone
     },
     (err, response) => {
       if (err) {
         console.error('❌ ProcessPayment gRPC error:', err);
         return res.status(500).json({ success: false, message: err.message });
       }
-      
-      console.log('✅ Midtrans token sent to frontend');
       res.json(response);
     }
   );
 });
 
-/**
- * RUTE: WEBHOOK (Midtrans memanggil ini)
- */
+//WEBHOOK
 router.post('/webhook', async (req, res) => {
   const notification = req.body;
   console.log('🔔 Received Midtrans Webhook:');
@@ -98,7 +83,6 @@ router.post('/webhook', async (req, res) => {
   }
 
   try {
-    // 1. Verifikasi notifikasi (Penting!)
     const statusResponse = await coreApi.transaction.status(transactionId);
     if (notification.status_code !== statusResponse.status_code || 
         notification.gross_amount !== statusResponse.gross_amount) {
@@ -106,7 +90,6 @@ router.post('/webhook', async (req, res) => {
       return res.status(403).send('Invalid notification');
     }
 
-    // 2. Kirim notifikasi ke payment-service (gRPC)
     paymentClient.HandlePaymentNotification(
       {
         transaction_id: transactionId,
@@ -122,7 +105,6 @@ router.post('/webhook', async (req, res) => {
         
         console.log(`✅ Payment DB updated for ${transactionId}`);
 
-        // 3. JIKA SUKSES, perbarui status TIKET
         let newTicketStatus = 'pending';
         if (transactionStatus == 'settlement' || (transactionStatus == 'capture' && fraudStatus == 'accept')) {
           newTicketStatus = 'paid';
@@ -130,27 +112,54 @@ router.post('/webhook', async (req, res) => {
           newTicketStatus = 'cancelled';
         }
         
-        if (newTicketStatus !== 'pending') {
-          // Ambil ticket_id dari DB
-          const [payRows] = await pool.query('SELECT ticket_id FROM payments WHERE transaction_id = ?', [transactionId]);
+        if (newTicketStatus === 'paid') {
+          
+          const [payRows] = await pool.query(
+            `SELECT p.customer_name, p.customer_email, t.id as ticket_id, 
+                    t.ticket_code, t.quantity, t.total_price,
+                    e.title as event_title, e.date as event_date, 
+                    e.time as event_time, e.location as event_location
+             FROM payments p
+             JOIN tickets t ON p.ticket_id = t.id
+             JOIN events e ON p.event_id = e.id
+             WHERE p.transaction_id = ?`, 
+             [transactionId]
+          );
+
           if (payRows.length > 0) {
-            const ticketId = payRows[0].ticket_id;
+            const data = payRows[0];
             
-            // Panggil gRPC service 'UpdateTicketStatus'
             eventClient.UpdateTicketStatus(
-              { ticketId: ticketId.toString(), status: newTicketStatus },
+              { ticketId: data.ticket_id.toString(), status: 'paid' },
               (ticketErr, ticketRes) => {
                 if (ticketErr || !ticketRes.success) {
                   console.error('❌ gRPC UpdateTicketStatus Error:', ticketErr || ticketRes.message);
                 } else {
-                  console.log(`✅ Ticket ${ticketId} status updated to '${newTicketStatus}'`);
+                  console.log(`✅ Ticket ${data.ticket_id} status updated to 'paid'`);
+                  
+                  notificationClient.SendEmailTicket({
+                    to_email: data.customer_email,
+                    customer_name: data.customer_name,
+                    event_title: data.event_title,
+                    event_date: data.event_date,
+                    event_time: data.event_time,
+                    event_location: data.event_location,
+                    ticket_code: data.ticket_code,
+                    quantity: data.quantity,
+                    total_price: data.total_price
+                  }, (emailErr, emailRes) => {
+                    if (emailErr || !emailRes.success) {
+                      console.error('❌ gRPC SendEmailTicket Error:', emailErr || emailRes.message);
+                    } else {
+                      console.log(`✅ Email notification sent to ${data.customer_email}`);
+                    }
+                  });
                 }
               }
             );
           }
         }
         
-        // 4. Kirim balasan 200 OK ke Midtrans
         res.status(200).send('OK');
       }
     );
@@ -160,10 +169,7 @@ router.post('/webhook', async (req, res) => {
   }
 });
 
-
-/**
- * RUTE: GET /history/:userId (User: Get My Payments)
- */
+//GET PAYMENT HISTORY
 router.get('/history/:userId', (req, res) => {
   const { userId } = req.params;
   paymentClient.GetPaymentHistory(

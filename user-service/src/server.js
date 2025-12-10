@@ -2,12 +2,11 @@ import grpc from "@grpc/grpc-js";
 import protoLoader from "@grpc/proto-loader";
 import path from "path";
 import { fileURLToPath } from "url";
-import { registerUser, loginUser } from "./services/userService.js";
+import { registerUser, loginUser, getAllUsers, deleteUser } from "./services/userService.js"; 
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Load Proto
 const PROTO_PATH = path.join(__dirname, "../proto/user.proto");
 const packageDefinition = protoLoader.loadSync(PROTO_PATH, {
   keepCase: true,
@@ -18,12 +17,11 @@ const packageDefinition = protoLoader.loadSync(PROTO_PATH, {
 });
 const userProto = grpc.loadPackageDefinition(packageDefinition).user;
 
-// gRPC Service Implementation
 const userService = {
   Register: async (call, callback) => {
     try {
-      const { username, password, role } = call.request;
-      const user = await registerUser(username, password, role || "user");
+      const { username, password, role, email, phone } = call.request;
+      const user = await registerUser(username, password, role || "user", email, phone);
       callback(null, { message: "User registered successfully", user });
     } catch (err) {
       console.error("Register error:", err.message);
@@ -41,9 +39,29 @@ const userService = {
       callback({ code: grpc.status.UNAUTHENTICATED, message: err.message });
     }
   },
+
+  GetAllUsers: async (call, callback) => {
+    try {
+      const users = await getAllUsers();
+      callback(null, { users: users });
+    } catch (err) {
+      console.error("GetAllUsers error:", err.message);
+      callback({ code: grpc.status.INTERNAL, message: err.message });
+    }
+  },
+
+  DeleteUser: async (call, callback) => {
+    try {
+      const { id } = call.request;
+      const response = await deleteUser(id);
+      callback(null, response);
+    } catch (err) {
+      console.error("DeleteUser error:", err.message);
+      callback({ code: grpc.status.INTERNAL, message: err.message });
+    }
+  },
 };
 
-// Jalankan Server
 const server = new grpc.Server();
 server.addService(userProto.UserService.service, userService);
 

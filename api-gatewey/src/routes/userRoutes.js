@@ -6,9 +6,8 @@ const router = express.Router();
 
 // REGISTER
 router.post("/register", (req, res) => {
-  const { username, password, role = "user" } = req.body; // sesuai kolom DB
-  // forward ke gRPC dengan field username, password, role
-  userClient.Register({ username, password, role }, (err, response) => {
+  const { username, password, role = "user", email, phone } = req.body; 
+  userClient.Register({ username, password, role, email, phone }, (err, response) => {
     if (err) {
       console.error("gRPC Register error:", err);
       return res.status(500).json({ success: false, message: err.message || "Internal server error" });
@@ -19,7 +18,7 @@ router.post("/register", (req, res) => {
 
 // LOGIN
 router.post("/login", (req, res) => {
-  const { username, password } = req.body; // sesuai kolom DB
+  const { username, password } = req.body;
   userClient.Login({ username, password }, (err, response) => {
     if (err) {
       console.error("gRPC Login error:", err);
@@ -27,6 +26,29 @@ router.post("/login", (req, res) => {
       return res.status(status).json({ success: false, message: err.message });
     }
     res.json(response);
+  });
+});
+
+//GET ALL USERS
+router.get("/", (req, res) => { 
+  userClient.GetAllUsers({}, (err, response) => {
+    if (err) {
+      console.error("gRPC GetAllUsers error:", err);
+      return res.status(500).json({ success: false, message: err.message });
+    }
+    return res.json({ success: true, users: response.users });
+  });
+});
+
+//DELETE USER
+router.delete("/:id", (req, res) => { 
+  const { id } = req.params;
+  userClient.DeleteUser({ id: parseInt(id) }, (err, response) => {
+    if (err) {
+      console.error("gRPC DeleteUser error:", err);
+      return res.status(500).json({ success: false, message: err.message });
+    }
+    return res.json(response); // { success: true, message: "..." }
   });
 });
 

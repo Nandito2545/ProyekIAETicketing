@@ -1,6 +1,6 @@
 import React from "react";
 import { BrowserRouter as Router, Routes, Route, useLocation } from "react-router-dom";
-import NavBar from "./components/NavBar";
+import NavBar from "./components/Navbar.jsx";
 import Footer from "./components/Footer";
 import SignIn from "./pages/auth/SignIn";
 import SignUp from "./pages/auth/SignUp";
@@ -8,7 +8,7 @@ import Home from "./pages/user/Home";
 import Event from "./pages/user/Event";
 import EventDetail from "./pages/user/EventDetail";
 import MyTickets from "./pages/user/MyTickets";
-import ViewTicket from "./pages/user/ViewTicket"; // ✅ 1. Import halaman baru
+import ViewTicket from "./pages/user/ViewTicket";
 
 import AdminLayout from "./pages/admin/AdminLayout";
 import Dashboard from "./pages/admin/Dashboard";

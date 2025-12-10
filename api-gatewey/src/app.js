@@ -29,7 +29,7 @@ app.get("/", (req, res) => {
   res.json({ message: "API Gateway is running successfully 🚀" });
 });
 
-// 404 handler (paling bawah, jangan dihapus)
+//404 handler
 app.use((req, res) => {
   res.status(404).json({ message: "Route not found" });
 });

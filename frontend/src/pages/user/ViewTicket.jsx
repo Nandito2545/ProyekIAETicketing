@@ -1,30 +1,43 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { getTicketById } from "../../services/ticketService";
 import { Spinner, Alert } from "react-bootstrap";
 import { QRCodeCanvas } from 'qrcode.react'; // Import QR Code
-import html2canvas from 'html2canvas'; // Import html2canvas
-import "./ViewTicket.css"; // Import CSS baru
+// ✅ Kita tidak lagi membutuhkan html2canvas
+import "./ViewTicket.css";
 import { ArrowLeft } from "lucide-react";
 
 // Komponen Tiket Tunggal
 const Ticket = ({ ticket, event, index }) => {
-  const ticketRef = useRef(null); // Ref untuk menargetkan div tiket
+  // ❌ Ref untuk screenshot tidak diperlukan lagi
+  // const ticketRef = useRef(null); 
 
-  // Fungsi Download
+  // ✅ FUNGSI DOWNLOAD BARU: Mengunduh QR Code dari Canvas
   const handleDownload = () => {
-    if (!ticketRef.current) return;
+    // 1. Temukan elemen canvas QR code dengan ID uniknya
+    const canvas = document.getElementById(`qr-code-${ticket.id}-${index}`);
+    
+    if (canvas) {
+      // 2. Konversi canvas menjadi Data URL (gambar PNG)
+      const pngUrl = canvas
+        .toDataURL("image/png")
+        .replace("image/png", "image/octet-stream"); // Trik untuk memaksa download
 
-    html2canvas(ticketRef.current, { backgroundColor: null }).then((canvas) => {
-      const link = document.createElement('a');
-      link.download = `ticket-${ticket.ticket_code}-${index + 1}.png`;
-      link.href = canvas.toDataURL('image/png');
+      // 3. Buat link sementara untuk mengunduh
+      const link = document.createElement("a");
+      link.href = pngUrl;
+      link.download = `qr-ticket-${ticket.ticket_code}.png`; // Nama file
+      document.body.appendChild(link);
       link.click();
-    });
+      document.body.removeChild(link);
+    } else {
+      console.error("Tidak dapat menemukan elemen QR Code Canvas");
+    }
   };
 
   return (
-    <div className="ticket-visual" ref={ticketRef}>
+    // ❌ 'ref={ticketRef}' tidak diperlukan lagi
+    <div className="ticket-visual">
       <div className="ticket-info">
         <h3>{event.title}</h3>
         <p><strong>Date:</strong> {event.date} | {event.time}</p>
@@ -33,13 +46,15 @@ const Ticket = ({ ticket, event, index }) => {
       </div>
       <div className="ticket-qr">
         <QRCodeCanvas 
-          value={ticket.ticket_code} // ✅ QR Code dibuat dari Ticket Code
+          // ✅ TAMBAHKAN ID: Beri ID unik agar bisa ditemukan
+          id={`qr-code-${ticket.id}-${index}`}
+          value={ticket.ticket_code} // QR Code berisi kode tiket
           size={90} 
           bgColor={"#ffffff"} 
           fgColor={"#000000"} 
         />
         <button onClick={handleDownload} className="btn-download-ticket">
-          Download
+          Download QR
         </button>
       </div>
     </div>
@@ -113,7 +128,6 @@ const ViewTicket = () => {
           <p className="text-muted">You purchased {ticket.quantity} ticket{ticket.quantity > 1 ? 's' : ''} for this event.</p>
         </div>
         
-        {/* ✅ Render tiket sebanyak quantity */}
         <div className="ticket-grid">
           {Array.from({ length: ticket.quantity }).map((_, index) => (
             <Ticket 

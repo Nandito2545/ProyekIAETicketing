@@ -1,31 +1,27 @@
 import db from "../config/db.js";
 import bcrypt from "bcrypt";
 
-// 🧩 REGISTER USER
-export const registerUser = async (username, password, role = "user") => {
-  // Cek apakah username sudah ada
+// REGISTER USER (Sudah ada)
+export const registerUser = async (username, password, role = "user", email, phone) => {
   const [existing] = await db.query("SELECT * FROM users WHERE username = ?", [username]);
   if (existing.length > 0) throw new Error("Username already exists");
 
-  // Hash password
   const hashedPassword = await bcrypt.hash(password, 10);
 
-  // Simpan user baru
   const [result] = await db.query(
-    "INSERT INTO users (username, password, role, createdAt, updatedAt) VALUES (?, ?, ?, NOW(), NOW())",
-    [username, hashedPassword, role]
+    "INSERT INTO users (username, password, role, email, phone, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, NOW(), NOW())",
+    [username, hashedPassword, role, email, phone]
   );
 
-  // Ambil data user yang baru disimpan
   const [userRows] = await db.query(
-    "SELECT id, username, role FROM users WHERE id = ?",
+    "SELECT id, username, role, email, phone FROM users WHERE id = ?",
     [result.insertId]
   );
 
   return userRows[0];
 };
 
-// 🧩 LOGIN USER
+// LOGIN USER (Sudah ada)
 export const loginUser = async (username, password) => {
   const [rows] = await db.query("SELECT * FROM users WHERE username = ?", [username]);
   if (rows.length === 0) throw new Error("User not found");
@@ -34,5 +30,36 @@ export const loginUser = async (username, password) => {
   const isMatch = await bcrypt.compare(password, user.password);
   if (!isMatch) throw new Error("Invalid credentials");
 
-  return { id: user.id, username: user.username, role: user.role };
+  return { 
+    id: user.id, 
+    username: user.username, 
+    role: user.role, 
+    email: user.email, 
+    phone: user.phone 
+  };
+};
+
+// ✅ FUNGSI BARU: Get All Users
+export const getAllUsers = async () => {
+  const [rows] = await db.query("SELECT id, username, role, email, phone, createdAt FROM users");
+  return rows;
+};
+
+// ✅ FUNGSI BARU: Delete User
+export const deleteUser = async (userId) => {
+  // Database Anda sudah diatur dengan ON DELETE CASCADE,
+  // jadi menghapus user akan otomatis menghapus tiket & pembayaran terkait.
+  
+  // Pertama, cek apakah user adalah 'admin'
+  const [userRows] = await db.query("SELECT role FROM users WHERE id = ?", [userId]);
+  if (userRows.length > 0 && userRows[0].role === 'admin') {
+    throw new Error("Cannot delete an admin account.");
+  }
+
+  const [result] = await db.query("DELETE FROM users WHERE id = ?", [userId]);
+  
+  if (result.affectedRows === 0) {
+    throw new Error("User not found");
+  }
+  return { success: true, message: "User deleted successfully" };
 };

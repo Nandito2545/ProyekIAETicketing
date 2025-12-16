@@ -5,9 +5,12 @@ package user;
 service UserService {
   rpc Register (RegisterRequest) returns (RegisterResponse);
   rpc Login (LoginRequest) returns (LoginResponse);
-  
   rpc GetAllUsers (Empty) returns (UserListResponse);
   rpc DeleteUser (UserIdRequest) returns (DeleteResponse);
+  
+  // ✅ 1. TAMBAHKAN: Service Update Profile
+  rpc UpdateProfile (UpdateProfileRequest) returns (UserResponse);
+  rpc GetUserById (UserIdRequest) returns (UserResponse); // Untuk mengambil data terbaru
 }
 
 message Empty {}
@@ -48,10 +51,27 @@ message LoginResponse {
   User user = 2;
 }
 
+// ✅ 2. TAMBAHKAN: Request Update
+message UpdateProfileRequest {
+  int32 id = 1;
+  string username = 2;
+  string email = 3;
+  string phone = 4;
+  string profile_picture = 5; // Filename gambar
+}
+
+// ✅ 3. TAMBAHKAN: Response User Tunggal
+message UserResponse {
+  bool success = 1;
+  string message = 2;
+  User user = 3;
+}
+
 message User {
   int32 id = 1;
   string username = 2;
   string role = 3;
   string email = 4;
   string phone = 5;
+  string profile_picture = 6; // ✅ Field baru
 }

@@ -22,14 +22,15 @@ const SignIn = () => {
 
       // Sesuaikan dengan response backend
       if (res.user) {
-        // Simpan data login di localStorage
-        localStorage.setItem("username", res.user.username);
-        localStorage.setItem("role", res.user.role);
-        
-        // ✅ PERBAIKAN: Simpan juga 'userId' (ID numerik)
-        localStorage.setItem("userId", res.user.id); 
+  localStorage.setItem("token", res.user.token);
+  localStorage.setItem("userRole", res.user.role);
+  localStorage.setItem("username", res.user.username);
+  localStorage.setItem("userId", res.user.id);
+  
+  // ✅ TAMBAHKAN BARIS INI: Simpan foto profil ke penyimpanan browser
+  localStorage.setItem("profile_picture", res.user.profile_picture || ""); 
 
-        alert(res.message || "Login berhasil!");
+  alert(res.message || "Login Berhasil!");
 
         // Arahkan sesuai role
         navigate(res.user.role === "admin" ? "/admin/Dashboard" : "/Home");

@@ -63,3 +63,33 @@ export const deleteUser = async (userId) => {
   }
   return { success: true, message: "User deleted successfully" };
 };
+
+// ... (fungsi registerUser, loginUser, getAllUsers, deleteUser yang sudah ada) ...
+
+// ✅ FUNGSI BARU: Get User By ID
+export const getUserById = async (id) => {
+  const [rows] = await db.query("SELECT id, username, role, email, phone, profile_picture FROM users WHERE id = ?", [id]);
+  return rows[0];
+};
+
+// ✅ FUNGSI BARU: Update Profile
+export const updateUserProfile = async (id, username, email, phone, profilePicture) => {
+  // Jika profilePicture ada (di-upload), update kolom itu juga
+  // Jika tidak, biarkan yang lama (logic di query bisa disesuaikan)
+  
+  let query = "UPDATE users SET username = ?, email = ?, phone = ?";
+  let params = [username, email, phone];
+
+  if (profilePicture) {
+    query += ", profile_picture = ?";
+    params.push(profilePicture);
+  }
+
+  query += " WHERE id = ?";
+  params.push(id);
+
+  await db.query(query, params);
+
+  // Kembalikan data terbaru
+  return await getUserById(id);
+};

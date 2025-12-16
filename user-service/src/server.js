@@ -2,7 +2,7 @@ import grpc from "@grpc/grpc-js";
 import protoLoader from "@grpc/proto-loader";
 import path from "path";
 import { fileURLToPath } from "url";
-import { registerUser, loginUser, getAllUsers, deleteUser } from "./services/userService.js"; 
+import { registerUser, loginUser, getAllUsers, deleteUser, getUserById,updateUserProfile } from "./services/userService.js"; 
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -60,6 +60,28 @@ const userService = {
       callback({ code: grpc.status.INTERNAL, message: err.message });
     }
   },
+
+  GetUserById: async (call, callback) => {
+    try {
+      const user = await getUserById(call.request.id);
+      if (!user) return callback(null, { success: false, message: "User not found" });
+      callback(null, { success: true, user });
+    } catch (err) {
+      callback({ code: grpc.status.INTERNAL, message: err.message });
+    }
+  },
+
+  UpdateProfile: async (call, callback) => {
+    try {
+      const { id, username, email, phone, profile_picture } = call.request;
+      const updatedUser = await updateUserProfile(id, username, email, phone, profile_picture);
+      callback(null, { success: true, message: "Profile updated", user: updatedUser });
+    } catch (err) {
+      console.error("Update error:", err);
+      callback({ code: grpc.status.INTERNAL, message: err.message });
+    }
+  }
+
 };
 
 const server = new grpc.Server();

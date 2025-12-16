@@ -146,4 +146,7 @@ ADD COLUMN customer_name VARCHAR(255) NULL AFTER payment_method,
 ADD COLUMN customer_email VARCHAR(255) NULL AFTER customer_name,
 ADD COLUMN customer_phone VARCHAR(255) NULL AFTER customer_email;
 
+ALTER TABLE users 
+ADD COLUMN profile_picture VARCHAR(255) NULL;
+
 COMMIT;

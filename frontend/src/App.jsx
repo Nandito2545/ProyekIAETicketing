@@ -9,6 +9,7 @@ import Event from "./pages/user/Event";
 import EventDetail from "./pages/user/EventDetail";
 import MyTickets from "./pages/user/MyTickets";
 import ViewTicket from "./pages/user/ViewTicket";
+import Profile from "./pages/user/Profile";
 
 import AdminLayout from "./pages/admin/AdminLayout";
 import Dashboard from "./pages/admin/Dashboard";
@@ -37,9 +38,8 @@ function AppContent() {
         <Route path="/event/:id" element={<EventDetail />} />
         <Route path="/EventDetail" element={<EventDetail />} />
         <Route path="/MyTickets" element={<MyTickets />} />
-        
-        {/* ✅ 2. Tambahkan Rute Baru untuk View Ticket */}
         <Route path="/ticket/:id" element={<ViewTicket />} />
+        <Route path="/profile" element={<Profile />} />
 
         {/* === Rute Admin === */}
         <Route path="/admin" element={<AdminLayout />}>

@@ -14,26 +14,29 @@ dotenv.config();
 
 // Setup Path untuk ES Modules
 const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename); // Ini mengarah ke folder 'src'
+const __dirname = path.dirname(__filename); // Mengarah ke folder 'src'
 
 const app = express();
 const PORT = process.env.PORT || 5000;
 
 app.use(cors());
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
 
-// ✅ PERBAIKAN UTAMA: DEFINISI FOLDER UPLOADS
-// __dirname adalah '.../api-gatewey/src'
-// Kita harus mundur ke '.../api-gatewey/uploads'
+// ✅ PERBAIKAN PENTING: NAIKKAN LIMIT JSON
+// Default limit express sangat kecil. Wajib dinaikkan (misal 10mb atau 50mb)
+// agar bisa menerima string Base64 gambar profil.
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
+// ✅ DEFINISI FOLDER UPLOADS
+// Mundur satu folder dari 'src' ke root 'api-gatewey', lalu masuk 'uploads'
 const uploadsPath = path.join(__dirname, '../uploads');
 
-// Log untuk memastikan path-nya benar di terminal
+// Log untuk memastikan path benar (membantu debugging)
 console.log('------------------------------------------------');
 console.log(`📂 Folder Uploads terdeteksi di: ${uploadsPath}`);
 console.log('------------------------------------------------');
 
-// Buka akses folder tersebut ke publik
+// Buka akses folder tersebut ke publik agar gambar bisa diakses frontend
 app.use('/uploads', express.static(uploadsPath));
 
 // Routes

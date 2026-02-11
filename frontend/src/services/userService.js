@@ -1,5 +1,6 @@
 import axios from "axios";
 
+// Pastikan port backend benar (5000)
 const API_URL = import.meta.env.VITE_USER_API || "http://localhost:5000/api/users";
 
 export const login = async (username, password) => {
@@ -18,34 +19,25 @@ export const register = async (username, password, role = "user", email, phone) 
   return response.data;
 };
 
-// ✅ FUNGSI BARU UNTUK ADMIN
 export const getAllUsers = async () => {
-  const token = localStorage.getItem('token'); // (Jika Anda implementasi token auth)
-  const response = await axios.get(API_URL, {
-    // headers: { 'Authorization': `Bearer ${token}` }
-  });
-  return response.data; // Mengharapkan { success: true, users: [...] }
+  const response = await axios.get(API_URL);
+  return response.data; 
 };
 
-// ✅ FUNGSI BARU UNTUK ADMIN
 export const deleteUser = async (userId) => {
-  const token = localStorage.getItem('token');
-  const response = await axios.delete(`${API_URL}/${userId}`, {
-    // headers: { 'Authorization': `Bearer ${token}` }
-  });
-  return response.data; // Mengharapkan { success: true, message: "..." }
+  const response = await axios.delete(`${API_URL}/${userId}`);
+  return response.data; 
 };
 
-// ✅ Get User Detail
-export const getUserById = async (id) => {
+// ✅ PERBAIKAN: Ubah nama 'getUserById' menjadi 'getUserProfile'
+export const getUserProfile = async (id) => {
   const response = await axios.get(`${API_URL}/${id}`);
-  return response.data; // { success: true, user: ... }
+  return response.data; 
 };
 
-// ✅ Update User Profile (FormData untuk gambar)
-export const updateUserProfile = async (id, formData) => {
-  const response = await axios.put(`${API_URL}/${id}`, formData, {
-    headers: { "Content-Type": "multipart/form-data" },
-  });
+// ✅ PERBAIKAN: Kirim sebagai JSON (tanpa header multipart/form-data)
+// Karena kita menggunakan Base64, Axios akan otomatis menganggapnya JSON.
+export const updateUserProfile = async (id, data) => {
+  const response = await axios.put(`${API_URL}/${id}`, data);
   return response.data;
 };

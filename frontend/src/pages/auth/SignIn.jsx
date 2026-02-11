@@ -20,20 +20,34 @@ const SignIn = () => {
     try {
       const res = await login(username, password);
 
-      // Sesuaikan dengan response backend
-      if (res.user) {
-  localStorage.setItem("token", res.user.token);
-  localStorage.setItem("userRole", res.user.role);
-  localStorage.setItem("username", res.user.username);
-  localStorage.setItem("userId", res.user.id);
-  
-  // ✅ TAMBAHKAN BARIS INI: Simpan foto profil ke penyimpanan browser
-  localStorage.setItem("profile_picture", res.user.profile_picture || ""); 
+      // Cek struktur response (sesuaikan dengan backend Anda)
+      // Biasanya: res.token ada di root, dan res.user berisi data user
+      const user = res.user || res; // Fallback jika struktur berbeda
 
-  alert(res.message || "Login Berhasil!");
+      if (user) {
+        // 1. Simpan Data ke LocalStorage
+        // Pastikan path token benar (res.token atau res.user.token)
+        localStorage.setItem("token", res.token || user.token); 
+        localStorage.setItem("userRole", user.role);
+        localStorage.setItem("username", user.username);
+        localStorage.setItem("userId", user.id);
+        
+        // ✅ SIMPAN FOTO PROFIL
+        // Jika null/undefined, simpan string kosong agar tidak error
+        localStorage.setItem("profile_picture", user.profile_picture || ""); 
 
-        // Arahkan sesuai role
-        navigate(res.user.role === "admin" ? "/admin/Dashboard" : "/Home");
+        alert(res.message || "Login Berhasil!");
+
+        // 2. Navigasi & RELOAD
+        // Kita tentukan tujuan dulu
+        const targetPath = user.role === "admin" ? "/admin/Dashboard" : "/Home";
+
+        // ✅ PERBAIKAN UTAMA:
+        // Gunakan window.location.href untuk memaksa reload halaman.
+        // Ini memastikan Navbar membaca data terbaru dari localStorage.
+        navigate(targetPath);
+        window.location.reload(); 
+        
       } else {
         setError(res.message || "Username atau password salah.");
       }

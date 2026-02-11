@@ -1,49 +1,60 @@
+/* Container Utama: Membuat kartu berada tepat di tengah vertikal & horizontal */
 .profile-container {
-  min-height: 85vh;
+  min-height: 90vh; /* Hampir setinggi layar */
   display: flex;
+  justify-content: center;
   align-items: center;
+  padding: 20px;
+  background-color: #f8f9fa; /* Warna background halaman abu-abu sangat muda */
 }
 
+/* Kartu Profil */
 .profile-card {
+  width: 100%;
+  max-width: 600px; /* Batasi lebar agar tidak terlalu lebar di layar besar */
   border-radius: 20px;
-  overflow: hidden;
   background: #ffffff;
+  border: none;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08); /* Bayangan halus */
+  overflow: hidden;
   transition: transform 0.3s ease;
 }
 
-.profile-card:hover {
-  transform: translateY(-5px);
-}
-
+/* Wrapper Foto Profil */
 .profile-img-wrapper {
-  width: 150px;
-  height: 150px;
+  width: 140px;
+  height: 140px;
   position: relative;
-  margin-bottom: 20px;
+  margin: 0 auto 20px auto; /* Tengah horizontal & jarak bawah */
 }
 
+/* Gambar Profil */
 .profile-img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: cover; /* Mencegah gambar gepeng */
+  border-radius: 50%;
+  border: 4px solid #ffffff; /* Border putih */
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
 }
 
+/* Overlay untuk Ganti Foto (Hanya muncul saat Edit) */
 .img-overlay {
   position: absolute;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0, 0, 0, 0.6);
+  background: rgba(0, 0, 0, 0.5); /* Hitam transparan */
   border-radius: 50%;
   display: flex;
+  flex-direction: column;
   justify-content: center;
   align-items: center;
   color: white;
   cursor: pointer;
   opacity: 0;
   transition: opacity 0.3s ease;
-  backdrop-filter: blur(2px);
 }
 
 .profile-img-wrapper:hover .img-overlay {
@@ -52,39 +63,88 @@
 
 .upload-label {
   cursor: pointer;
+  font-size: 0.85rem;
   font-weight: 600;
-  font-size: 0.9rem;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+  margin: 0;
 }
 
-.upload-label i {
-  font-size: 1.5rem;
+/* Judul & Username */
+.profile-name {
+  color: #333;
+  font-weight: 700;
   margin-bottom: 5px;
 }
 
-.form-control-lg {
+.profile-username {
+  color: #C10C99; /* Warna tema TicketID */
+  font-weight: 500;
   font-size: 1rem;
-  padding: 12px 20px;
+}
+
+/* Styling Input Form */
+.form-control-custom {
+  background-color: #f9f9f9;
   border: 1px solid #e0e0e0;
-  border-radius: 10px;
+  border-radius: 12px;
+  padding: 12px 15px;
+  font-size: 1rem;
+  color: #333;
+  transition: all 0.3s;
 }
 
-.form-control-lg:focus {
-  box-shadow: 0 0 0 0.25rem rgba(193, 12, 153, 0.15);
+.form-control-custom:focus {
+  background-color: #fff;
   border-color: #C10C99;
+  box-shadow: 0 0 0 3px rgba(193, 12, 153, 0.1);
 }
 
-.btn-profile {
+/* Saat Disabled (Mode Baca) */
+.form-control-custom:disabled {
+  background-color: #fff; /* Tetap putih agar mudah dibaca */
+  border-color: transparent; /* Hilangkan border */
+  padding-left: 0; /* Rata kiri */
+  font-weight: 500;
+  color: #555;
+  cursor: default;
+}
+
+/* Label Form */
+.form-label-custom {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #888;
+  margin-bottom: 5px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Tombol */
+.btn-action {
+  border-radius: 12px;
+  padding: 12px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  transition: all 0.2s;
+}
+
+.btn-primary-custom {
   background-color: #C10C99;
   border: none;
-  border-radius: 10px;
-  padding: 12px;
-  transition: all 0.3s ease;
+  color: white;
 }
 
-.btn-profile:hover {
-  background-color: #a00a80;
+.btn-primary-custom:hover {
+  background-color: #a50a82;
+  transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(193, 12, 153, 0.3);
+}
+
+.btn-secondary-custom {
+  background-color: #e0e0e0;
+  color: #333;
+  border: none;
+}
+
+.btn-secondary-custom:hover {
+  background-color: #d0d0d0;
 }
